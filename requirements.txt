@@ -9,6 +9,3 @@ uvicorn
 python-multipart
 pywin32
 
-# TreeSitter for multi-language AST analysis (30+ languages)
-tree-sitter>=0.21.0
-tree-sitter-languages>=1.10.0

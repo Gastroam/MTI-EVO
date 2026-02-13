@@ -35,10 +35,44 @@ dist/
 # Brain (contains user axioms - should not be in repo)
 .mti-brain/
 
-# Cleanup
-not-necessary/
 
-# MTI Lab / Non-Core
+# IDE / Editor
+.vscode/
+.idea/
+
+# MTI System / Lab Data
+.dream_shadow/
+.mti-brain-test/
+.mti-brain/
+*.json
+!package.json
+!tsconfig.json
+!jsconfig.json
+
+# Root Text Files (Explicit Ignore)
+IDRE_KEY_*.txt
+*.old
+*.bak
+*.log
+
+# Root Scripts (Lab Launchers)
+launch_cortex.py
+run_evo.py
+mti_chronos.py
+secure_config_template.py
+weight_map_dump.json
+mti_config.json
+
+# Whitelist Critical Configs
+!requirements.txt
+!README.md
+!README_API.md
+!CONTRIBUTING.md
+!CHANGELOG.md
+!MANIFEST.in
+!pyproject.toml
+!pytest.ini
+!mypy.ini
 src/mti_evo_plugins/
 mti_evo_plugins/
 src/unused/
