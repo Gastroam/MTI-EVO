@@ -1,219 +1,269 @@
-# MTI-EVO  
+
+# MTI-EVO
+
 **Memory-Substrate LLM Runtime & Cognitive Architecture Framework**
 
 > Local-first. Substrate-aware. Engine-agnostic.
 
-MTI-EVO is a modular cognitive runtime designed to extend Large Language Models with:
+MTI-EVO is a modular runtime framework that extends Large Language Models with a persistent semantic substrate and a layered cognitive architecture.
 
--  Persistent semantic substrate (Holographic Lattice)
--  Layered Cortex architecture (Broca, Memory, Introspection, Crystallization)
--  Pluggable engines (GGUF, Native, Resonant, Hybrid, etc.)
--  Substrate multiprocessing runtime (single VRAM holder + HTTP workers)
--  Architecture boundary enforcement & CI rigor
-
-It is not a chatbot wrapper.  
+It is not a chatbot wrapper.
 It is an experimental runtime for structured, persistent, substrate-aware AI systems.
 
 ---
 
-##  Core Concepts
+## Overview
 
-### 1. Holographic Lattice (Core Substrate)
+MTI-EVO introduces a separation between:
 
-A deterministic, persistent semantic field where concepts are stored as neurons and stimulated through contextual embeddings.
+* **Inference engines** (LLM backends)
+* **Semantic substrate** (persistent concept field)
+* **Cognitive orchestration layers**
+* **Runtime and concurrency control**
 
-Features:
-
-- Capacity-bounded lattice
-- Eviction policies
-- MMap / JSONL persistence backends
-- Deterministic seed mapping
-- Semantic reinforcement (attractors)
-- Isolation-aware testing
+The goal is to provide a composable architecture where memory, inference, and orchestration are independent, testable, and extensible components.
 
 ---
 
-### 2. Cortex Architecture
+## Core Architecture
 
+```
 mti_evo/
-├── core/ # Substrate & persistence
-├── cortex/ # Cognitive layers
-├── engines/ # LLM engine protocol & registry
-├── runtime/ # Substrate runtime
-└── server/ # HTTP control plane
+├── core/       # Substrate & persistence
+├── cortex/     # Cognitive layers
+├── engines/    # LLM engine protocol & registry
+├── runtime/    # Substrate runtime orchestration
+└── server/     # HTTP control plane
+```
 
 ---
 
+## 1. Holographic Lattice (Core Substrate)
 
-Cortex modules:
+The Holographic Lattice is a deterministic, capacity-bounded semantic field.
 
-| Component        | Purpose                                      |
-|------------------|----------------------------------------------|
-| BrocaAdapter     | Text ↔ Seed interface                        |
-| CortexMemory     | Unified persistence abstraction              |
-| MTIProprioceptor | Cognitive state introspection (Flow/Chaos)   |
-| MTICrystallizer  | Collective memory formation                  |
-| Bootstrap        | Proven and cultural attractor initialization |
+Concepts are represented as neurons identified by stable seeds.
+Contextual embeddings stimulate and reinforce these neurons.
+
+### Features
+
+* Capacity-bounded lattice
+* Eviction policies
+* Deterministic seed mapping
+* Semantic reinforcement (attractors)
+* MMap and JSONL persistence backends
+* Replay marker & WAL recovery
+* CI-tested persistence integrity
+* Isolation-aware testing
+
+The lattice is independent from any specific LLM backend.
 
 ---
 
-### 3. Engine Protocol
+## 2. Cortex Architecture
+
+The `cortex/` package contains higher-level cognitive components built on top of the substrate.
+
+| Component        | Purpose                         |
+| ---------------- | ------------------------------- |
+| BrocaAdapter     | Text ↔ Seed interface           |
+| CortexMemory     | Unified persistence abstraction |
+| MTIProprioceptor | Cognitive state introspection   |
+| MTICrystallizer  | Collective memory formation     |
+| Bootstrap        | Attractor initialization        |
+
+Cortex modules do not depend on runtime or server layers.
+
+---
+
+## 3. Engine Protocol
 
 MTI-EVO does not hardcode a model backend.
 
-All engines implement a unified protocol:
+All engines implement a unified interface:
 
 ```python
 class EngineProtocol:
-    def load(...)
-    def infer(...)
-    def unload(...)
+    def load(self, config: dict) -> None: ...
+    def infer(self, prompt: str, **kwargs) -> EngineResult: ...
+    def unload(self) -> None: ...
 ```
 
-Supported engine types include:
+### Supported Engine Types
 
-gguf (llama.cpp)
-
-native (Transformers)
-
-resonant
-
-hybrid
-
-experimental engines
+* `gguf` (llama.cpp)
+* `native` (Transformers-based)
+* `resonant`
+* `hybrid`
+* Experimental engines
 
 Engines are dynamically discovered via the registry system.
 
----
-
-### 4. Substrate Runtime
-
-The substrate server architecture separates:
-
-Inference Process (VRAM holder)
-
-HTTP Workers (mmap substrate inhabitants)
-
-This enables:
-
-Reduced VRAM duplication
-
-Multiprocessing inference
-
-Persistent substrate continuity
-
-Local-first AI deployment
-
-Controlled concurrency
+The runtime is engine-agnostic.
 
 ---
 
-### 🚀 Installation
+## 4. Substrate Runtime
+
+The Substrate Runtime separates:
+
+* **Inference Process** (single VRAM holder)
+* **HTTP Workers** (mmap substrate inhabitants)
+
+This architecture enables:
+
+* Reduced VRAM duplication
+* Multiprocessing inference
+* Persistent substrate continuity
+* Controlled concurrency
+* Local-first deployment
+* Queue-based IPC for inference
+
+This model supports scalable local inference while maintaining a shared semantic substrate.
+
+---
+
+## Installation
+
+Python 3.11 required.
+
+```bash
 git clone https://github.com/Gastroam/MTI-EVO.git
 cd MTI-EVO
 pip install -e .[dev]
+```
 
+---
 
-Python 3.11 required
+## Running Tests
 
-### 🧪 Run Tests
+```bash
 pytest
+```
 
+### Architecture boundary checks
 
-### Architecture boundary checks:
-
+```bash
 pytest tests/architecture
+```
 
+### Type checking
 
-Type checking:
+```bash
+mypy src/mti_evo/
+```
 
-mypy src/mti_evo/core/persistence/backend.py
+---
 
-### 🌐 Run Substrate Server
+## Running the Substrate Server
+
+```bash
 mti-substrate
+```
 
+or:
 
-Or:
-
+```bash
 python -m mti_evo.server.substrate
-
+```
 
 Health endpoint:
 
+```
 GET /health
+```
 
-🧱 Architectural Boundaries
+---
+
+## Architectural Boundaries
 
 The project enforces strict isolation rules:
 
-core cannot depend on server
-
-cortex cannot depend on server
-
-engines cannot depend on runtime
-
-Runtime components cannot leak into substrate core
+* `core` cannot depend on `server`
+* `cortex` cannot depend on `server`
+* `engines` cannot depend on `runtime`
+* Runtime components cannot leak into substrate core
 
 Boundary violations fail CI.
 
-🛠 Development
+---
+
+## Development
 
 Development install:
 
+```bash
 pip install -e .[dev]
+```
 
+### Linting
 
-Linting:
-
+```bash
 ruff check .
 ruff format .
+```
 
+### Type checking
 
-Type checking:
-
+```bash
 mypy src/mti_evo/
+```
 
+### CI Enforcement
 
-CI enforces:
+The CI pipeline validates:
 
-Ruff lint rules
+* Ruff lint rules
+* MyPy type checking
+* Architecture boundary tests
+* Deterministic test isolation
+* Cross-platform compatibility (Windows + Linux)
 
-MyPy type validation
+---
 
-Boundary integrity tests
+## Plugins
 
-Deterministic test isolation
-
-🧩 Plugins
-
-Advanced capabilities (Hive, IDRE, research endpoints) are designed as external plugins.
+Advanced capabilities (e.g., Hive, IDRE, research endpoints) are designed as external plugins.
 
 The core runtime remains:
 
-Minimal
+* Minimal
+* Hardened
+* Substrate-focused
+* Engine-agnostic
+* Dependency-isolated
 
-Hardened
+---
 
-Substrate-focused
+## Design Goals
 
-Engine-agnostic
+* Deterministic substrate memory
+* Local-first execution
+* Engine-agnostic runtime
+* Strict architectural isolation
+* Research-friendly modular structure
+* CI-enforced stability
+* Modular extensibility
 
-🔬 Design Goals
+---
 
-Deterministic substrate memory
+## License
 
-Local-first execution
+Apache 2.0
 
-Engine-agnostic runtime
+---
 
-Strict architectural isolation
+## Vision
 
-Research-friendly structure
+MTI-EVO explores a runtime model where:
 
-CI-enforced boundaries
+* Memory is a persistent substrate, not a temporary context window
+* Engines are modular inference components
+* Concurrency is explicitly controlled
+* Architecture boundaries are enforced by CI
 
-Modular extensibility
+The objective is not to build another assistant.
 
-📜 License
+The objective is to provide a composable cognitive runtime framework.
 
-MIT (planned)
+---
