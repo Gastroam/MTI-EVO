@@ -1,3 +1,0 @@
-# 
-
-{"status": "online", "neurons": 1301, "version": "2.2 (Proprioceptive)", "mode": "Bicameral", "vram": 45.0, "drift": 0.12, "proprioception": {"state": "EMERGENCE", "resonance": 4.40226707126029, "entropy": 2.2900808151637015, "velocity": 0.5801988150927446, "governor_active": false}}

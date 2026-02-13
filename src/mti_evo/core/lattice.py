@@ -72,17 +72,11 @@ class HolographicLattice:
         self.persistence_manager = getattr(config, "persistence_manager", None)
         
         if self.persistence_manager is None:
-             try:
-                 from mti_evo.core.persistence.manager import PersistenceManager
-                 self.persistence_manager = PersistenceManager(self.config)
-             except ImportError:
-                 # Fallback for minimal envs? OR just run without persistence?
-                 # Run without means no memory.
-                 logger.warning("PersistenceManager could not be loaded. Running in ephemeral mode.")
-                 self.persistence_manager = None
-             except Exception as e:
-                 logger.error(f"Failed to initialize PersistenceManager: {e}")
-                 self.persistence_manager = None
+             # Pure ephemeral mode if not injected.
+             # This aligns with "Core should not import upper layers" (if PersistenceManager was upper)
+             # And "CortexMemory should be the only owner" (so it must be passed in).
+             logger.warning("No Persistence Manager injected. Holographic Lattice running in EPHEMERAL mode.")
+
 
         # [SELF-AWARENESS] Proprioception (Internal Sense of State)
         self.proprioceptor = None
@@ -109,16 +103,12 @@ class HolographicLattice:
                     self.plugin_manager.register(hive, self)
                     logger.info("Hive Plugin Attached.")
                 except ImportError:
-                    # Fallback: Add root to path for dev mode
-                    # lattice.py is in src/mti_evo/core
-                    # root is ../../../
-                    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-                    if root_dir not in sys.path:
-                        sys.path.insert(0, root_dir)
-                    from mti_evo_plugins.hive.plugin import HivePlugin
-                    hive = HivePlugin(self.config)
-                    self.plugin_manager.register(hive, self)
-                    logger.info("Hive Plugin Attached (Dev Path).")
+                    # Fallback: We do not modify sys.path.
+                    # User must ensure mti_evo_plugins is in path.
+                    logger.warning("Hive Plugin not found in path. Ensure PYTHONPATH includes it.")
+                    # from mti_evo_plugins.hive.plugin import HivePlugin
+                    # hive = HivePlugin(self.config)
+                    # self.plugin_manager.register(hive, self)
             except Exception as e:
                 logger.error(f"Failed to initialize Hive Plugin: {e}")
 

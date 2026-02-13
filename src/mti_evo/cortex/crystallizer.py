@@ -241,3 +241,6 @@ class MTICrystallizer:
         self._save_to_disk(new_c) # Save child
         
         return new_c
+        
+# Alias for cleaner external API or legacy support
+ConceptCrystallizer = MTICrystallizer

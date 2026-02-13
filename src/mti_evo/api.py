@@ -3,10 +3,9 @@ import sys
 import json
 import logging
 
-# Ensure src and playground are in path
-_api_dir = os.path.dirname(__file__)
-sys.path.insert(0, os.path.abspath(os.path.join(_api_dir, '..')))  # src
-sys.path.insert(0, os.path.abspath(os.path.join(_api_dir, '..', '..', 'playground')))  # playground
+# Ensure src and playground are in path - REMOVED
+# Modules should rely on the environment being configured correctly (PYTHONPATH or installed package)
+# _api_dir = os.path.dirname(__file__)
 
 from mti_evo.cortex.broca import BrocaAdapter
 from mti_evo.cortex.memory import CortexMemory

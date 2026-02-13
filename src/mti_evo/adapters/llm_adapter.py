@@ -16,18 +16,7 @@ Available Engines (model_type):
 
 from mti_evo.engines.protocol import EngineResult
 from mti_evo.engines.gguf_engine import GGUFEngine
-# Experimental engines should be loaded dynamically or moved.
-# For now, we fix the imports to allow compilation if they exist.
-# But we are about to move them.
-# Let's verify what exists.
-from mti_evo.engines.gguf_engine import GGUFEngine
-from mti_evo.engines.native_engine import NativeEngine
-from mti_evo.engines.quantum_engine import QuantumEngine
-from mti_evo.engines.api_engine import APIEngine
-from mti_evo.engines.resonant_engine import ResonantEngine
-from mti_evo.engines.bi_camera_engine import BiCameraEngine
-from mti_evo.engines.qoop_engine import QoopEngine
-from mti_evo.engines.hybrid_engine import HybridEngine
+from mti_evo.engines.registry import EngineRegistry, discover_engines
 import os
 
 class LLMAdapter:
@@ -36,6 +25,9 @@ class LLMAdapter:
     def __init__(self, config=None, auto_load=True):
         self.config = config or {}
         self.engine = None
+        
+        # Ensure registry is populated
+        discover_engines()
         
         if auto_load:
             self.load_model()
@@ -47,24 +39,19 @@ class LLMAdapter:
         
         print(f"[LLMAdapter] Factory requesting: {model_type} for {model_path}")
         
-        if model_type == "quantum":
-            self.engine = QuantumEngine(self.config)
-        elif model_type == "resonant":
-            self.engine = ResonantEngine(self.config)
-        elif model_type == "bicameral":
-            self.engine = BiCameraEngine(self.config)
-        elif model_type == "qoop":
-            self.engine = QoopEngine(self.config)
-        elif model_type == "hybrid":
-            self.engine = HybridEngine(self.config)
-        elif model_type == "api":
-            self.engine = APIEngine(self.config)
-        elif model_type == "gguf" or model_path.endswith(".gguf"):
-            self.engine = GGUFEngine(self.config)
-        elif model_type == "native" or os.path.isdir(model_path) or model_path.endswith(".safetensors"):
-            self.engine = NativeEngine(self.config)
-        else:
-            print("[LLMAdapter] ⚠️ Unknown type. Defaulting to GGUF or Sim.")
+        print(f"[LLMAdapter] Factory requesting: {model_type} for {model_path}")
+        
+        # Heuristic for Auto
+        if model_type == "auto":
+             if model_path.endswith(".gguf"): model_type = "gguf"
+             elif model_path.endswith(".safetensors") or os.path.isdir(model_path): model_type = "native"
+             else: model_type = "gguf" # Default
+        
+        # Try Registry
+        try:
+            self.engine = EngineRegistry.create(model_type, self.config)
+        except ValueError:
+            print(f"[LLMAdapter] ⚠️ Engine '{model_type}' not found. Falling back to GGUF.")
             self.engine = GGUFEngine(self.config)
 
         if self.engine:

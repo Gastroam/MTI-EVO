@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 
 from mti_evo.core.config import MTIConfig
-from mti_evo.adapters.llm_adapter import LLMAdapter
+from mti_evo.engines.registry import EngineRegistry, discover_engines
 from mti_evo.server.playground import PlaygroundManager
 from mti_evo.server.router import ControlPlaneRouter
 from mti_evo.security.sanitizer import get_sanitizer
@@ -58,10 +58,10 @@ class UnifiedHandler(BaseHTTPRequestHandler):
         # Sanitize
         if self.sanitizer:
             prompt = self.sanitizer.sanitize(prompt)
-            
-        # Unified: Direct call
+
         llm = self.router.llm
         if llm:
+            # EngineProtocol: infer returns EngineResult
             resp = llm.infer(prompt, max_tokens=data.get('max_tokens', 1024))
             self._send_json({"response": resp.text})
         else:
@@ -89,9 +89,21 @@ class UnifiedServer:
         self.port = port
         self.config = MTIConfig()
         
-        # Load LLM Locally
-        self.llm = LLMAdapter(config=self.config, auto_load=False) # Manual load?
-        # Unified usually auto-loads or lazy loads.
+        # Load LLM Locally (Unified Mode)
+        discover_engines()
+        # Heuristic for default engine in dev mode
+        engine_type = "gguf" # Default
+        if hasattr(self.config, 'engine_type'): engine_type = self.config.engine_type
+        
+        try:
+             self.llm = EngineRegistry.create(engine_type, self.config)
+             # Auto-load in dev mode? 
+             # Protocol says load(config).
+             self.llm.load(self.config)
+             print(f"   ✅ Engine Loaded: {engine_type}")
+        except Exception as e:
+             print(f"   ⚠️ Engine Load Failed: {e}")
+             self.llm = None
         
         # Shared Components (Runtime)
         from mti_evo.runtime.substrate_runtime import SubstrateRuntime

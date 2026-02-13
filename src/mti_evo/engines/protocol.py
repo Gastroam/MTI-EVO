@@ -30,7 +30,7 @@ class EngineProtocol(Protocol):
         """
         ...
 
-    def infer(self, prompt: str, **kwargs) -> EngineResult:
+    def infer(self, prompt: str, **kwargs: Any) -> EngineResult:
         """
         Execute inference.
         Args:

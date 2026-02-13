@@ -163,4 +163,6 @@ class MTIProprioceptor:
                  config.decay_rate = 0.15 # Restore baseline
                  return True, "Decay rate restored to 0.15 (FLOW)"
                  
-        return False, "No tuning required"
+
+# Alias for cleaner external API
+IntrospectionEngine = MTIProprioceptor

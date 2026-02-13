@@ -57,9 +57,30 @@ class InferenceProcess(Process):
             print(f"   ✅ Substrate Runtime initialized (Writer Mode)")
             
             # 2. Load VRAM model (ONLY in this process)
-            from mti_evo.adapters.llm_adapter import LLMAdapter
-            self.llm = LLMAdapter(config=self.model_config, auto_load=True)
-            print(f"   ✅ VRAM model loaded")
+            # Use Engine Registry to load appropriate engine
+            from mti_evo.engines.registry import EngineRegistry, discover_engines
+            
+            # Ensure registry is populated (including plugins)
+            discover_engines()
+            
+            # Determine engine type from config
+            model_type = self.model_config.get("model_type", "auto")
+            
+            # Heuristic for Auto if needed
+            if model_type == "auto":
+                 p = self.model_config.get("model_path", "")
+                 if p.endswith(".gguf"): model_type = "gguf"
+                 elif p.endswith(".safetensors"): model_type = "native"
+                 else: model_type = "gguf"
+
+            try:
+                self.llm = EngineRegistry.create(model_type, self.model_config)
+                # EngineProtocol.load(config)
+                self.llm.load(self.model_config)
+                print(f"   ✅ Engine Loaded: {model_type}")
+            except Exception as e:
+                print(f"   ❌ Engine Load Failed: {e}")
+                self.llm = None
             
             print(f"🧠 Inference Process READY (PID {os.getpid()})")
             
@@ -106,14 +127,19 @@ class InferenceProcess(Process):
             self._ensure_coherency()
             
             # 3. Inference with resonance context
-            if action == 'telepathy' or action == 'infer':
-                response_text = self.llm.infer(
-                    prompt,
+            if self.llm:
+                # EngineProtocol: infer(prompt, **kwargs) -> EngineResult
+                res = self.llm.infer(
+                    prompt=prompt,
                     max_tokens=request.get('max_tokens', 1024),
-                    temperature=request.get('temperature', 0.7)
+                    temperature=request.get('temperature', 0.7),
+                    stop=request.get('stop', ["<end_of_turn>"])
                 )
+                
+                response_text = res.text
+                # metrics = res.metrics
             else:
-                response_text = f"[Resonance: {resonance:.4f}] Processed."
+                response_text = "[Error: No Brain Loaded]"
             
             # 4. Return result
             latency_ms = (time.time() - start_time) * 1000
@@ -158,8 +184,8 @@ class InferenceProcess(Process):
         # Unload model
         if self.llm:
             try:
-                if hasattr(self.llm, 'unload_model'):
-                    self.llm.unload_model()
+                if hasattr(self.llm, 'unload'):
+                    self.llm.unload()
             except:
                 pass
         

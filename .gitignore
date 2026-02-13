@@ -1,5 +1,12 @@
 # Models
 models/
+docs/
+cortex_data/
+matrices/
+data/
+replication_kit/
+repro_logs/
+projects/
 *.safetensors
 *.bin
 *.gguf
@@ -30,3 +37,28 @@ dist/
 
 # Cleanup
 not-necessary/
+
+# MTI Lab / Non-Core
+src/mti_evo_plugins/
+mti_evo_plugins/
+src/unused/
+unused/
+playground/
+experiments/
+frontend/
+demo/
+cli/
+
+# Artifacts
+tests/reality/
+test_logs/
+repro_logs/
+logs/
+
+# Data
+*.npz
+*.npy
+*.pt
+*.jsonl
+*.wal
+*.index

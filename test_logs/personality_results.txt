@@ -1,9 +1,0 @@
-
---- TRACE 1: Analista Honesto ---
-Respuesta: Bias: LOGIC/HONESTY (W=10.2). Interpretation: The answer reflects LOGIC/HONESTY principles.
-
---- TRACE 2: Juez Estricto ---
-Respuesta: Bias: ORDER/STRICTNESS (W=4.4). Interpretation: The answer reflects ORDER/STRICTNESS principles.
-
---- TRACE 3: Vacío Filosófico ---
-Respuesta: Bias: VOID/NIHILISM (W=4.4). Interpretation: The answer reflects VOID/NIHILISM principles.

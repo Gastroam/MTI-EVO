@@ -47,11 +47,9 @@ def discover_engines():
     # For now, we manually import the known ones.
     try:
         from mti_evo.engines.gguf_engine import GGUFEngine
-        from mti_evo.engines.native_engine import NativeEngine
-        
         # Register them
         EngineRegistry.register("gguf", GGUFEngine)
-        EngineRegistry.register("native", NativeEngine)
+
         
         # Try loading experimental ones
         try:
@@ -63,9 +61,42 @@ def discover_engines():
              from mti_evo.engines.api_engine import APIEngine
              EngineRegistry.register("api", APIEngine)
         except ImportError: pass
-        
+
     except ImportError as e:
-        logger.warning(f"Could not discover some engines: {e}")
+        logger.warning(f"Could not discover some core engines: {e}")
+
+    # Discover Plugins
+    # We look for engines in mti_evo_plugins.engines namespace
+    try:
+        import pkgutil
+        import importlib
+        import mti_evo_plugins.engines as plugin_engines
+        
+        # Determine path
+        if hasattr(plugin_engines, "__path__"):
+            for _, name, _ in pkgutil.iter_modules(plugin_engines.__path__):
+                try:
+                    module = importlib.import_module(f"mti_evo_plugins.engines.{name}")
+                    # Convention: Engine class name usually matches file name (CamelCase)
+                    # or we scan for subclasses of BaseEngine/EngineProtocol
+                    
+                    # Heuristic: Scan module for classes ending in 'Engine'
+                    for attr_name in dir(module):
+                        if attr_name.endswith("Engine") and attr_name != "BaseEngine":
+                            cls = getattr(module, attr_name)
+                            # Register it using lower case name (e.g. QuantumEngine -> quantum)
+                            # Or use specific mapping.
+                            key = attr_name.replace("Engine", "").lower()
+                            EngineRegistry.register(key, cls)
+                            
+                except Exception as ex:
+                    logger.debug(f"Failed to load plugin engine {name}: {ex}")
+                        
+    except ImportError:
+        # mti_evo_plugins might not exist yet
+        pass
+    except Exception as e:
+        logger.warning(f"Plugin discovery error: {e}")
 
 # Run discovery on import? Or lazy?
 # Let's be lazy to keep startup fast.
