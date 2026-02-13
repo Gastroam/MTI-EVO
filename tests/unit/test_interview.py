@@ -8,11 +8,17 @@ from rich.panel import Panel
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
-    from mti_evo.mti_broca import MTIBroca
+    from mti_evo.cortex.broca import BrocaAdapter
+    from mti_evo.cortex.memory import CortexMemory
+    from mti_evo.core.config import MTIConfig
 except ImportError:
+    # Fallback for local development if mti_evo is not installed as a package
     try:
-        from src.mti_evo.mti_broca import MTIBroca
-    except:
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
+        from mti_evo.cortex.broca import BrocaAdapter
+        from mti_evo.cortex.memory import CortexMemory
+        from mti_evo.core.config import MTIConfig
+    except ImportError:
         sys.exit(1)
 
 try:

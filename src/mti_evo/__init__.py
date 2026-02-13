@@ -6,22 +6,40 @@ The Evolutionary Holographic Memory System.
 __version__ = "2.3.5"
 __author__ = "MTI-EVO Team"
 
-from .mti_core import MTINeuron, HolographicLattice, MTIDenseTissue
-from .mti_config import MTIConfig
-from .mti_logger import get_logger
-from .mti_telemetry import TelemetrySystem
-from .mti_proprioceptor import MTIProprioceptor, CognitiveState
-from .hive.idre_v3 import IDREInterface, HarmonicPacket
-from .mti_symbiosis_v2 import MTISymbiosis
-from .engines import (
-    GGUFEngine, 
-    QuantumEngine, 
-    HybridEngine, 
-    APIEngine, 
-    ResonantEngine, 
-    NativeEngine, 
-    BiCameraEngine
-)
+from .core.neuron import MTINeuron
+from .core.lattice import HolographicLattice
+from .core.dense_tissue import MTIDenseTissue
+from .core.config import MTIConfig
+from .core.logger import get_logger
+from .telemetry import TelemetrySystem
+
+try:
+    from .mti_proprioceptor import MTIProprioceptor, CognitiveState
+except ImportError:
+    MTIProprioceptor = None
+    CognitiveState = None
+try:
+    from .engines import (
+        GGUFEngine, 
+        QuantumEngine, 
+        HybridEngine, 
+        APIEngine, 
+        ResonantEngine, 
+        NativeEngine, 
+        BiCameraEngine
+    )
+except ImportError:
+    # Fallback or partial load?
+    # We might want to try importing them individually if one fails, but for now just catch all.
+    # Actually, importing individually is better but more verbose.
+    # Let's just define them as None if import fails, or let them be missing from namespace.
+    GGUFEngine = None
+    QuantumEngine = None
+    HybridEngine = None
+    APIEngine = None
+    ResonantEngine = None
+    NativeEngine = None
+    BiCameraEngine = None
 
 __all__ = [
     "MTINeuron", 
@@ -38,8 +56,5 @@ __all__ = [
     "NativeEngine",
     "BiCameraEngine",
     "MTIProprioceptor",
-    "CognitiveState",
-    "IDREInterface",
-    "HarmonicPacket",
-    "MTISymbiosis"
+    "CognitiveState"
 ]

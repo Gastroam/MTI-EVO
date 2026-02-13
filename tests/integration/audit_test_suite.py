@@ -18,8 +18,8 @@ if str(ROOT_DIR) not in sys.path:
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from mti_evo.mti_config import MTIConfig
-from mti_evo.mti_core import HolographicLattice
+from mti_evo.core.config import MTIConfig
+from mti_evo.core.lattice import HolographicLattice
 
 
 def _build_lattice(**kwargs):

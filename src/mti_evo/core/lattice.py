@@ -5,14 +5,27 @@ Holographic lattice orchestration logic.
 import time
 import sys
 import json
-
+import os
+import hashlib
+import math
+import random
 import numpy as np
+import os
+import weakref
 
-from mti_evo.core.eviction import pick_eviction_candidate
+from typing import List, Dict, Any, Optional
+
+from mti_evo.core.eviction import get_policy
+from mti_evo.core.eviction.policy import EvictionPolicy
 from mti_evo.core.neuron import MTINeuron
-from mti_evo.mti_config import MTIConfig
-from mti_evo.mti_logger import get_logger
-from mti_evo.mti_telemetry import TelemetrySystem
+from mti_evo.core.anchors import SemanticAnchorManager
+from mti_evo.core.config import MTIConfig
+from mti_evo.core.logger import get_logger
+from mti_evo.telemetry import TelemetrySystem
+# Helper for cosine similarity
+from mti_evo.core.neuron import cosine_similarity
+# Plugin System
+from mti_evo.core.plugins import PluginManager
 
 try:
     from mti_evo.mti_proprioceptor import MTIProprioceptor
@@ -54,10 +67,22 @@ class HolographicLattice:
         # Telemetry
         self.telemetry = TelemetrySystem() if config.telemetry_enabled else None
 
-        # Persistence (Lazy Loading)
-        self.persistence_manager = (
-            config.persistence_manager if hasattr(config, "persistence_manager") else None
-        )
+        # Persistence (Tiered Manager)
+        # [Phase J] We instantiate the manager if not provided injection-style.
+        self.persistence_manager = getattr(config, "persistence_manager", None)
+        
+        if self.persistence_manager is None:
+             try:
+                 from mti_evo.core.persistence.manager import PersistenceManager
+                 self.persistence_manager = PersistenceManager(self.config)
+             except ImportError:
+                 # Fallback for minimal envs? OR just run without persistence?
+                 # Run without means no memory.
+                 logger.warning("PersistenceManager could not be loaded. Running in ephemeral mode.")
+                 self.persistence_manager = None
+             except Exception as e:
+                 logger.error(f"Failed to initialize PersistenceManager: {e}")
+                 self.persistence_manager = None
 
         # [SELF-AWARENESS] Proprioception (Internal Sense of State)
         self.proprioceptor = None
@@ -65,9 +90,45 @@ class HolographicLattice:
             self.proprioceptor = MTIProprioceptor(self)
         self.last_stimulation_metrics = None
         
+        # [Phase F1] Semantic Anchors
+        self.anchor_manager = None
+        if hasattr(self.config, "anchor_file"):
+             from mti_evo.core.anchors import SemanticAnchorManager
+             self.anchor_manager = SemanticAnchorManager(self.config)
+        
+        # [Phase H] Plugin System
+        from mti_evo.core.plugins import PluginManager
+        self.plugin_manager = PluginManager()
+        
+        if getattr(self.config, "enable_hive", False):
+            try:
+                # Try standard import first
+                try:
+                    from mti_evo_plugins.hive.plugin import HivePlugin
+                    hive = HivePlugin(self.config)
+                    self.plugin_manager.register(hive, self)
+                    logger.info("Hive Plugin Attached.")
+                except ImportError:
+                    # Fallback: Add root to path for dev mode
+                    # lattice.py is in src/mti_evo/core
+                    # root is ../../../
+                    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+                    if root_dir not in sys.path:
+                        sys.path.insert(0, root_dir)
+                    from mti_evo_plugins.hive.plugin import HivePlugin
+                    hive = HivePlugin(self.config)
+                    self.plugin_manager.register(hive, self)
+                    logger.info("Hive Plugin Attached (Dev Path).")
+            except Exception as e:
+                logger.error(f"Failed to initialize Hive Plugin: {e}")
+
+        # Eviction Policy (Pluggable)
+        policy_name = getattr(config, "eviction_policy_name", "standard")
+        self.eviction_policy = get_policy(policy_name)
+        self.step_counter = 0
+
         # Reproducibility Report
         import platform
-        import hashlib
         
         # Deterministic config hash
         cfg_dict = vars(config) if hasattr(config, "__dict__") else {}
@@ -92,6 +153,34 @@ class HolographicLattice:
         )
         # Log concise report, full dump is in self.repro_report
         logger.info(f"Reproducibility Report (Hash): {cfg_hash}")
+        
+        # [Phase B3] Save Repro Report to Artifacts
+        self._save_repro_report()
+
+    def _save_repro_report(self):
+        """
+        Writes the reproducibility report to a JSON file in 'repro_logs/.
+        This creates an immutable audit trail for every lattice instantiation.
+        """
+        try:
+            log_dir = "repro_logs"
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+            
+            # Use self.time_fn() for timestamp if it returns comparable number, 
+            # otherwise fallback to time.time() for filename uniqueness.
+            # actually time_fn might be a mock object.
+            try:
+                ts = int(time.time()) 
+            except:
+                ts = 0
+                
+            filename = f"{log_dir}/{ts}_{self.repro_report['config_hash']}.json"
+            
+            with open(filename, "w") as f:
+                json.dump(self.repro_report, f, indent=2, sort_keys=True, default=str)
+        except Exception as e:
+            logger.warning(f"Failed to write repro report: {e}")
 
     def snapshot(self, deterministic=True):
         """
@@ -119,35 +208,31 @@ class HolographicLattice:
 
     def _prune_weakest(self):
         """
-        Eviction strategy controlled by config:
-        - full_scan
-        - sample
-        - deterministic_sample
+        Eviction strategy delegated to Policy.
         Returns 1 if eviction occurred, 0 otherwise.
         """
         # Pass both rng and time_fn for determinism
-        target_seed, fallback, meta = pick_eviction_candidate(
+        target_seed, fallback, meta = self.eviction_policy.pick_candidate(
             self.active_tissue, 
             self.rng, 
-            self.config, 
+            self.config,
             time_fn=self.time_fn
         )
         if target_seed is None:
-            return 0
+            return 0 # Nothing to evict
 
-        if target_seed in self.active_tissue:
-            del self.active_tissue[target_seed]
+        # Fire Event
+        self.plugin_manager.trigger("on_eviction", {"seed": target_seed, "reason": meta.get('reason', 'unknown')})
 
-            if self.telemetry:
-                # enrich with reason/scores if available in meta
-                self.telemetry.record_eviction()
-                # If telemetry supports rich events, we could log:
-                # self.telemetry.log_event("eviction", f"Evicted {target_seed}", data=meta)
+        # Delete from tissue
+        del self.active_tissue[target_seed]
 
-            logger.debug(f"Evicted Seed {target_seed} (Fallback: {fallback}) Meta: {meta}")
-            return 1
+        if self.telemetry:
+            # enrich with reason/scores if available in meta
+            self.telemetry.record_eviction(target_seed, meta)
 
-        return 0
+        logger.debug(f"Evicted seed {target_seed} ({meta.get('reason', 'unknown')})")
+        return 1
 
     def stimulate(self, seed_stream, input_signal, learn=True, labels=None):
         """
@@ -165,6 +250,13 @@ class HolographicLattice:
         x_in = np.atleast_2d(input_signal)
         input_size = x_in.shape[1]
 
+        x_in = np.atleast_2d(input_signal)
+        input_size = x_in.shape[1]
+
+        self.step_counter += 1
+        if self.anchor_manager:
+            self.anchor_manager.check_and_reinforce(self, self.step_counter)
+
         for seed in seed_stream:
             # 1. NEUROGENESIS (Lazy Instantiation)
             if seed not in self.active_tissue:
@@ -174,8 +266,30 @@ class HolographicLattice:
                     loaded_neuron = self.persistence_manager.get_neuron(seed)
 
                 if loaded_neuron:
-                    # RECALL: Found in MMAP
-                    self.active_tissue[seed] = loaded_neuron
+                    # RECALL: Found in MMAP/WAL
+                    if isinstance(loaded_neuron, dict):
+                        # Rehydrate from dict
+                        # We need to create a new neuron and populate it
+                        # This duplicates logic in load() - refactor candidate
+                        n = MTINeuron(
+                            input_size=input_size,
+                            config=self.config,
+                            trainable_bias=True,
+                            rng=self.rng,
+                            time_fn=self.time_fn
+                        )
+                        n.weights = np.array(loaded_neuron['weights'])
+                        n.velocity = np.array(loaded_neuron['velocity'])
+                        n.bias = loaded_neuron.get('bias', 0.0)
+                        n.gravity = loaded_neuron.get('gravity', 20.0)
+                        n.age = loaded_neuron.get('age', 0)
+                        n.last_accessed = loaded_neuron.get('last_accessed', 0.0)
+                        if 'label' in loaded_neuron:
+                             n.label = loaded_neuron['label']
+                        self.active_tissue[seed] = n
+                    else:
+                        # Assume it's already an object (legacy support)
+                        self.active_tissue[seed] = loaded_neuron
                 else:
                     # GENESIS: New Concept
                     if len(self.active_tissue) >= self.capacity_limit:
@@ -247,6 +361,182 @@ class HolographicLattice:
         if getattr(self.config, "stimulate_return_metrics", False):
             return metrics
         return avg_resonance_pre
+
+    def stimulate_batch(self, seed_stream, input_signal, learn=True, labels=None):
+        """
+        Vectorized stimulation matching MTINeuron physics.
+        """
+        start_time = time.time()
+        input_size = len(self.config.layer_dims) if hasattr(self.config, 'layer_dims') else len(np.atleast_1d(input_signal))
+        x_in = np.array(input_signal)
+        if x_in.ndim == 1:
+            x_in = np.tile(x_in, (len(seed_stream), 1))
+        
+        batch_size = len(seed_stream)
+
+        self.step_counter += 1
+        if self.anchor_manager:
+            self.anchor_manager.check_and_reinforce(self, self.step_counter)
+        
+        # 1. Genesis / Retrieval (Serial fallback)
+        new_seeds = [s for s in seed_stream if s not in self.active_tissue]
+        if new_seeds:
+            # Lazy Load
+            if self.persistence_manager:
+                for s in new_seeds:
+                     loaded = self.persistence_manager.get_neuron(s)
+                     if loaded:
+                         self.active_tissue[s] = loaded
+            
+            # Create remaining
+            truly_new = [s for s in new_seeds if s not in self.active_tissue]
+            current_count = len(self.active_tissue)
+            space_needed = len(truly_new)
+            
+            while current_count + space_needed > self.capacity_limit:
+                 if self._prune_weakest():
+                     current_count -= 1
+                 else:
+                     break
+                     
+            for s in truly_new:
+                if len(self.active_tissue) >= self.capacity_limit:
+                    break
+                dim = x_in.shape[1] if x_in.ndim > 1 else input_size
+                self.active_tissue[s] = MTINeuron(
+                    input_size=dim,
+                    config=self.config,
+                    trainable_bias=True,
+                    rng=self.rng,
+                    time_fn=self.time_fn
+                )
+                if self.telemetry:
+                    self.telemetry.record_neurogenesis()
+                if labels and s in labels:
+                    self.active_tissue[s].label = labels[s]
+
+        # 2. Collect Valid Neurons
+        valid_indices = []
+        valid_neurons = []
+        for i, s in enumerate(seed_stream):
+            if s in self.active_tissue:
+                valid_indices.append(i)
+                valid_neurons.append(self.active_tissue[s])
+        
+        if not valid_neurons:
+            return [0.0] * batch_size
+
+        # 3. Vectorization (Object -> Arrays)
+        # We need W, B, Velocity, Age, Gravity
+        W = np.stack([n.weights for n in valid_neurons]) # (N, Dim)
+        B = np.array([n.bias for n in valid_neurons])    # (N,)
+        V = np.stack([n.velocity for n in valid_neurons]) # (N, Dim)
+        Age = np.array([n.age for n in valid_neurons])   # (N,)
+        Gravity = np.array([n.gravity for n in valid_neurons]) # (N,)
+        
+        X = x_in[valid_indices] # (N, Dim)
+        
+        # 4. Perception: Sigmoid(W . X + b)
+        # Note: MTINeuron uses dot(inputs, weights) which is sum(x*w)
+        logits = np.einsum('ij,ij->i', X, W) + B
+        
+        # Sigmoid: 1 / (1 + exp(-x))
+        # Stable sigmoid
+        output = np.zeros_like(logits)
+        mask_pos = logits >= 0
+        mask_neg = ~mask_pos
+        
+        z_pos = np.exp(-logits[mask_pos])
+        output[mask_pos] = 1 / (1 + z_pos)
+        
+        z_neg = np.exp(logits[mask_neg])
+        output[mask_neg] = z_neg / (1 + z_neg)
+        
+        results = [0.0] * batch_size
+        for idx, val in zip(valid_indices, output):
+            results[idx] = float(val)
+
+        # 5. Learning (Adapt)
+        if learn:
+            # 5.1 Update Age & Access
+            time_now = self.time_fn()
+            
+            # Match MTINeuron.adapt: Age increments BEFORE LR calculation
+            Age += 1
+            
+            # 5.2 Gravity Update (LTP)
+            # self.gravity = min(self.gravity + 0.05, 50.0)
+            Gravity = np.minimum(Gravity + 0.05, 50.0)
+            
+            # 5.3 Loss Calculation
+            # "Signal Reinforcer": y_true = 1.0 (Attractor)
+            y_true = 1.0
+            epsilon = 1e-15
+            y_pred_clamped = np.clip(output, epsilon, 1 - epsilon)
+            
+            # Weight factor: where(y_true==1, gravity, 1.0) -> Gravity since y_true=1
+            weight_factor = Gravity
+            
+            # Error = y_pred - y_true
+            error = output - y_true
+            weighted_error = error * weight_factor # (N,)
+            
+            # Gradient: x * weighted_error
+            # (N, Dim) = (N, Dim) * (N, 1)
+            gradient = X * weighted_error[:, np.newaxis]
+            bias_gradient = weighted_error
+            
+            # 5.4 LR Calculation with Diminishing Returns
+            initial_lr = self.config.initial_lr
+            decay = self.config.decay_rate
+            # current_lr = initial / (1 + decay * age)
+            current_lr_vec = initial_lr / (1 + decay * Age)
+            
+            if getattr(self.config, "diminishing_returns", True):
+                # current_magnitude = mean(abs(weights))
+                # damping = 1 / (1 + mag/10)
+                mags = np.mean(np.abs(W), axis=1)
+                damping = 1.0 / (1.0 + (mags / 10.0))
+                current_lr_vec *= damping
+                
+            # 5.5 Momentum Update
+            momentum = self.config.momentum
+            # vel = (mom * vel) - (lr * grad)
+            V = (momentum * V) - (current_lr_vec[:, np.newaxis] * gradient)
+            
+            # 5.6 Apply to Weights
+            W += V
+            
+            if hasattr(self.config, "trainable_bias") and self.config.trainable_bias: # Or infer from neurons? Assume True for batch
+                 B -= current_lr_vec * bias_gradient
+                 
+            # 5.7 Weight Cap & Normalization
+            max_w = getattr(self.config, "weight_cap", 80.0)
+            norms = np.linalg.norm(W, axis=1)
+            
+            mask_cap = norms > max_w
+            if np.any(mask_cap):
+                scale_factors = max_w / norms[mask_cap]
+                W[mask_cap] *= scale_factors[:, np.newaxis]
+                V[mask_cap] *= 0.5 # Drain kinetic energy
+                
+            # 6. Scatter Back to Objects
+            # This overhead is unavoidable until we refactor to pure tensor lattice.
+            # But the math was vectorized.
+            for idx, n in enumerate(valid_neurons):
+                 n.weights = W[idx]
+                 n.bias = float(B[idx])
+                 n.velocity = V[idx]
+                 n.age = int(Age[idx]) # Already incremented
+                 n.gravity = float(Gravity[idx])
+                 n.last_accessed = time_now
+
+        else:
+             time_now = self.time_fn()
+             for n in valid_neurons:
+                 n.last_accessed = time_now
+
+        return results
 
     def load(self, persistence_manager):
         """

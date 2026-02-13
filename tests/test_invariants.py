@@ -12,7 +12,7 @@ import tempfile
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
 
 from mti_evo.core.lattice import HolographicLattice
-from mti_evo.mti_config import MTIConfig
+from mti_evo.core.config import MTIConfig
 from mti_evo.core.neuron import MTINeuron
 
 # Configure logging to avoid noise during tests
@@ -63,6 +63,7 @@ class TestCoreInvariants(unittest.TestCase):
         cfg.capacity_limit = 2
         cfg.random_seed = 101
         cfg.eviction_sample_size = 2 # Scan all (since cap is 2)
+        cfg.grace_period = 0 # Disable grace period to test pure metabolic score
         clock = DeterministicClock()
         
         lattice = HolographicLattice(config=cfg, time_fn=clock)

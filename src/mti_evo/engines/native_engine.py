@@ -1,12 +1,14 @@
 import time
 from .base import BaseEngine, LLMResponse
 
-try:
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    HAS_TRANSFORMERS = True
-except ImportError:
-    HAS_TRANSFORMERS = False
+# Lazy import handles
+# try:
+#     import torch
+#     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+#     HAS_TRANSFORMERS = True
+# except ImportError:
+#     HAS_TRANSFORMERS = False
+HAS_TRANSFORMERS = None # Checked on load
 
 class NativeEngine(BaseEngine):
     """Engine for Native (Safetensors) models via Transformers."""
@@ -16,13 +18,19 @@ class NativeEngine(BaseEngine):
         self.hf_model = None
         self.tokenizer = None
         self.backend_name = "native"
-        if not HAS_TRANSFORMERS:
-            # Silent initialization, only warn if load attempted
-            pass
+        if self.config.get("check_deps", False):
+             try:
+                 import transformers
+                 import torch
+             except ImportError:
+                 pass # Silent fail in init, warn in load
 
     def load_model(self):
         import os
-        if not HAS_TRANSFORMERS: 
+        try:
+             import torch
+             from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+        except ImportError:
             print("[NativeEngine] ❌ Transformers/Torch not installed. Cannot load model.")
             return
         
@@ -168,7 +176,7 @@ class NativeEngine(BaseEngine):
             return LLMResponse(f"Error: {e}", 0, 0, 0.0)
 
     def embed(self, text: str):
-        if self.hf_model and HAS_TRANSFORMERS:
+        if self.hf_model:
             # [MEMORY SAFETY]
             with torch.no_grad():
                 inputs = self.tokenizer(text, return_tensors="pt").to(self.hf_model.device)

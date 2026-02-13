@@ -17,10 +17,10 @@ dependencies = [
 
 [project.scripts]
 mti-evo = "mti_evo.cli:main"
-mti-server = "mti_evo.server:main"
-mti-substrate = "mti_evo.substrate_server:run_substrate_server"
+mti-server = "mti_evo.server.substrate:run_substrate_server"
+mti-dev = "mti_evo.server.dev_server:run_dev_server"
+mti-substrate = "mti_evo.server.substrate:run_substrate_server" # Legacy alias
 mti-setup = "mti_evo.setup:main"
-mti-node = "mti_evo.mti_hive_node:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

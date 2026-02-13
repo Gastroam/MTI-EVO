@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
 
 from mti_evo.core.lattice import HolographicLattice
-from mti_evo.mti_config import MTIConfig
+from mti_evo.core.config import MTIConfig
 
 # Configure logging to avoid noise during tests
 logging.basicConfig(level=logging.ERROR)

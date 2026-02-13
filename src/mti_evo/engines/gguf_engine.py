@@ -1,13 +1,16 @@
 import time
 import os
-from .base import BaseEngine, LLMResponse
-from ..gpu_utils import get_gpu_stats
+from .base import BaseEngine
+from .protocol import EngineResult
+from mti_evo.tools.gpu_utils import get_gpu_stats
 
-try:
-    from llama_cpp import Llama
-    HAS_LLAMA = True
-except ImportError:
-    HAS_LLAMA = False
+# Lazy import handles
+# try:
+#     from llama_cpp import Llama
+#     HAS_LLAMA = True
+# except ImportError:
+#     HAS_LLAMA = False
+HAS_LLAMA = None # Checked on load
 
 class GGUFEngine(BaseEngine):
     """Engine for GGUF models via llama-cpp-python."""
@@ -16,12 +19,25 @@ class GGUFEngine(BaseEngine):
         super().__init__(config)
         self.llm = None
         self.backend_name = "gguf"
-        if not HAS_LLAMA:
-            print("[GGUFEngine] ❌ llama-cpp-python not installed.")
+        if self.config.get("check_deps", False):
+             try:
+                 import llama_cpp
+             except ImportError:
+                 print("[GGUFEngine] ❌ llama-cpp-python not installed.")
 
-    def load_model(self):
-        if not HAS_LLAMA: return
-        
+    def load(self, config: dict = None):
+        if config:
+            self.config.update(config)
+            # Update attributes from config
+            self.model_path = self.config.get("model_path", self.model_path)
+            self.n_ctx = self.config.get("n_ctx", self.n_ctx)
+            
+        try:
+            from llama_cpp import Llama
+        except ImportError:
+            print("[GGUFEngine] ❌ llama-cpp-python not installed.")
+            return
+
         gpu_layers = self.config.get("gpu_layers", -1)
         print(f"[GGUFEngine] 🦙 Loading: {self.model_path}")
         print(f"             (Ctx: {self.n_ctx}, GPU: {gpu_layers})")
@@ -39,11 +55,16 @@ class GGUFEngine(BaseEngine):
         except Exception as e:
             print(f"[GGUFEngine] ❌ Load Failed: {e}")
 
-    def infer(self, prompt: str, max_tokens: int = 1024, stop: list = None, **kwargs) -> LLMResponse:
+    def infer(self, prompt: str, **kwargs) -> EngineResult:
         t0 = time.perf_counter()
         if not self.llm:
-            return LLMResponse("GGUF Engine Not Loaded", 0, 0, 0.0)
+            return EngineResult("GGUF Engine Not Loaded", 0, 0, 0.0)
 
+        # Extract params from kwargs or use defaults
+        # We must POP them so they aren't passed twice in **kwargs
+        max_tokens = kwargs.pop("max_tokens", 1024)
+        stop = kwargs.pop("stop", None)
+        
         # Handle potential double-passing of temperature
         eff_temp = kwargs.pop("temperature", self.temperature)
         eff_stop = stop or ["<end_of_turn>"]
@@ -79,10 +100,10 @@ class GGUFEngine(BaseEngine):
             # Capture GPU Stats
             gpu_stats = get_gpu_stats()
 
-            return LLMResponse(text, tokens, latency, 0.95, gpu_stats=gpu_stats)
+            return EngineResult(text, tokens, latency, 0.95, metrics={"gpu": gpu_stats})
             
         except Exception as e:
-            return LLMResponse(f"Error: {e}", 0, 0, 0.0)
+            return EngineResult(f"Error: {e}", 0, 0, 0.0)
 
     def embed(self, text: str):
         if self.llm:
@@ -100,3 +121,11 @@ class GGUFEngine(BaseEngine):
             import gc
             gc.collect()
             print("[GGUFEngine] ✅ Unloaded.")
+
+    @property
+    def capabilities(self) -> dict:
+        return {
+            "embedding": True,
+            "streaming": False,
+            "device": "cuda" if self.config.get("gpu_layers", -1) != 0 else "cpu"
+        }

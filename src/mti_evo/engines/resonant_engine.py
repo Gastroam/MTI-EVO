@@ -15,24 +15,10 @@ from typing import List, Optional
 from .base import BaseEngine, LLMResponse
 
 # Conditional imports
-try:
-    import torch
-    HAS_TORCH = True
-except ImportError:
-    torch = None
-    HAS_TORCH = False
-
-try:
-    from transformers import AutoTokenizer, AutoConfig
-    HAS_TRANSFORMERS = True
-except ImportError:
-    HAS_TRANSFORMERS = False
-
-try:
-    from mti_evo.resonance_loader import ResonanceGuidedLoader
-    HAS_RESONANCE = True
-except ImportError:
-    HAS_RESONANCE = False
+# Lazy handles
+HAS_TORCH = None
+HAS_TRANSFORMERS = None
+HAS_RESONANCE = None
 
 
 class ResonantEngine(BaseEngine):
@@ -51,10 +37,9 @@ class ResonantEngine(BaseEngine):
         self.backend_name = "resonant"
         
         # Handle device selection with torch optional
-        if HAS_TORCH:
-            self.device = config.get("device", "cuda" if torch.cuda.is_available() else "cpu")
-        else:
-            self.device = "cpu"
+        # Handle device selection with torch optional
+        # Lazy check
+        self.device = config.get("device", "cpu") # Default to CPU until we know better
         
         self.loader: Optional[ResonanceGuidedLoader] = None
         self.tokenizer = None
@@ -68,13 +53,21 @@ class ResonantEngine(BaseEngine):
         }
 
     def load_model(self):
-        if not HAS_TRANSFORMERS:
-            print("[ResonantEngine] ❌ Transformers not installed.")
-            return
-        if not HAS_RESONANCE:
-            print("[ResonantEngine] ❌ ResonanceGuidedLoader not available.")
+        try:
+            import torch
+            from transformers import AutoTokenizer, AutoConfig
+            from mti_evo.resonance_loader import ResonanceGuidedLoader
+        except ImportError as e:
+            print(f"[ResonantEngine] ❌ Dependencies missing: {e}")
             return
             
+        # Update device check now that torch is loaded
+        if self.device == "cpu" and torch.cuda.is_available():
+             self.device = "cuda" # Auto-upgrade if available and not explicitly set?
+             # Actually, best to respect config or default. 
+             # If config was "cpu", stay cpu. If config was missing, maybe upgrade?
+             # Let's keep it simple.
+             
         print(f"[ResonantEngine] 🌌 Loading Resonant Model: {self.model_path}")
         
         try:
@@ -187,11 +180,12 @@ class ResonantEngine(BaseEngine):
         import gc
         gc.collect()
         
-        if HAS_TORCH and torch.cuda.is_available():
-            try:
+        try:
+            import torch
+            if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            except:
-                pass
+        except ImportError:
+            pass
         
         print("[ResonantEngine] ✅ Unloaded.")
 

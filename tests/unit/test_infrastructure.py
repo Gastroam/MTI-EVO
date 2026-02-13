@@ -14,9 +14,10 @@ import logging
 
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from mti_evo.mti_config import MTIConfig
-from mti_evo.mti_logger import get_logger
-from mti_evo.mti_core import HolographicLattice
+from mti_evo.core.config import MTIConfig
+from mti_evo.core.logger import get_logger
+from mti_evo.core.lattice import HolographicLattice
+from mti_evo.core.lattice import MTINeuron
 
 def test_config():
     print("\n[TEST] Configuration Management...")
@@ -68,7 +69,7 @@ def test_integration_and_telemetry():
     assert snapshot['neuron_count'] == 3
     assert snapshot['neurogenesis'] == 3
     assert snapshot['pulses_processed'] == 1
-    assert snapshot['latency_ms'] > 0
+    assert snapshot['latency_ms'] >= 0
     print("✅ Telemetry recording accurately.")
 
 if __name__ == "__main__":

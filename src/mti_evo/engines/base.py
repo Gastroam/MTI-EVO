@@ -1,14 +1,9 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import List, Optional, Union
+from .protocol import EngineResult, EngineProtocol
 
-@dataclass
-class LLMResponse:
-    text: str
-    tokens: int
-    latency_ms: float
-    coherence: float
-    gpu_stats: dict = None
+# Backwards Compatibility Alias
+LLMResponse = EngineResult
 
 class BaseEngine(ABC):
     """Abstract Base Class for MTI-EVO LLM Engines."""
@@ -21,12 +16,12 @@ class BaseEngine(ABC):
         self.backend_name = "base"
 
     @abstractmethod
-    def load_model(self):
+    def load(self, config: dict):
         """Load the model resources."""
         pass
 
     @abstractmethod
-    def infer(self, prompt: str, max_tokens: int = 1024, stop: list = None, **kwargs) -> LLMResponse:
+    def infer(self, prompt: str, **kwargs) -> EngineResult:
         """Generate text."""
         pass
     
@@ -39,3 +34,7 @@ class BaseEngine(ABC):
     def unload(self):
         """Free resources."""
         pass
+
+    @property
+    def capabilities(self) -> dict:
+        return {"embedding": False, "streaming": False, "device": "cpu"}

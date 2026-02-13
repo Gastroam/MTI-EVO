@@ -1,0 +1,36 @@
+{
+  "config_dump": {
+    "anchor_reinforcement_freq": 0,
+    "anchor_saturation_threshold": 0.95,
+    "capacity_limit": 5,
+    "decay_rate": 0.15,
+    "deterministic": true,
+    "diminishing_returns": true,
+    "embedding_dim": 64,
+    "enable_ghost": false,
+    "enable_hive": false,
+    "eviction_mode": "deterministic_sample",
+    "eviction_sample_size": 50,
+    "grace_period": 100,
+    "gravity": 20.0,
+    "idre_anchor_seeds": [
+      7245,
+      8888
+    ],
+    "initial_lr": 0.5,
+    "log_level": "INFO",
+    "mmap_capacity": 1048576,
+    "momentum": 0.9,
+    "passive_decay_rate": 1e-05,
+    "persistence_dir": "cortex_data",
+    "random_seed": 999,
+    "stimulate_return_metrics": false,
+    "telemetry_enabled": true,
+    "weight_cap": 80.0
+  },
+  "config_hash": "f8a6923b249c719e69296c3466042d4194b52afad16de27be1e4bda844239f70",
+  "numpy_version": "2.4.2",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python_version": "3.11.9",
+  "random_seed": 999
+}

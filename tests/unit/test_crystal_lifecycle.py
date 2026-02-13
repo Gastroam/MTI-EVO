@@ -14,7 +14,7 @@ import time
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.mti_memory import MTICrystallizer
+from mti_evo.cortex.crystallizer import MTICrystallizer
 
 class MockNeuron:
     def __init__(self, w): self.weights = np.array(w)

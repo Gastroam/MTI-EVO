@@ -4,7 +4,7 @@ Dense tissue primitives for matrix-style adaptation.
 
 import numpy as np
 
-from mti_evo.mti_config import MTIConfig
+from mti_evo.core.config import MTIConfig
 
 
 class MTIDenseTissue:

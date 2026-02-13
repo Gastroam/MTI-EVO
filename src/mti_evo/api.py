@@ -8,9 +8,11 @@ _api_dir = os.path.dirname(__file__)
 sys.path.insert(0, os.path.abspath(os.path.join(_api_dir, '..')))  # src
 sys.path.insert(0, os.path.abspath(os.path.join(_api_dir, '..', '..', 'playground')))  # playground
 
-from mti_evo.mti_broca import MTIBroca
-from mti_evo.mti_config import MTIConfig
-from mti_evo.mti_proprioceptor import MTIProprioceptor
+from mti_evo.cortex.broca import BrocaAdapter
+from mti_evo.cortex.memory import CortexMemory
+from mti_evo.core.config import MTIConfig
+from mti_evo.core.config import MTIConfig
+from mti_evo.cortex.introspection import MTIProprioceptor
 
 # Optional Rosetta import (for decoding seeds to text)
 try:
@@ -39,8 +41,9 @@ class EvoAPI:
         try:
             # Create a safe persistence ID from the path hash to avoid invalid chars
             pid = "api_" + str(abs(hash(self.base_path)))
-            self.broca = MTIBroca(pid)
             self.config = MTIConfig()
+            self.hippocampus = CortexMemory(persistence_id=pid, backend="auto")
+            self.broca = BrocaAdapter(config=self.config, hippocampus=self.hippocampus)
             
             # [PHASE 58] Cognitive Proprioception
             self.proprioceptor = MTIProprioceptor(self.broca.cortex)

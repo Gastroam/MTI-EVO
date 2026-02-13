@@ -37,7 +37,10 @@ DEFAULT_CONFIG = {
     "gpu_layers": -1,
     "api_provider": "openai",
     "api_model": "gpt-4o-mini",
+    "api_model": "gpt-4o-mini",
     "mode": "local_first",
+    "enable_hive": False,
+    "enable_ghost": False,
     "engine_defaults": {
         "quantum": {"n_ctx": 8192, "gpu_layers": -1, "temperature": 0.7, "cache_type_k": "f16"},
         "gguf": {"n_ctx": 4096, "gpu_layers": 33, "temperature": 0.8, "cache_type_k": "q8_0"},
