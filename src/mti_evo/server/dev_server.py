@@ -16,7 +16,16 @@ from mti_evo.core.config import MTIConfig
 from mti_evo.engines.registry import EngineRegistry, discover_engines
 from mti_evo.server.playground import PlaygroundManager
 from mti_evo.server.router import ControlPlaneRouter
-from mti_evo.security.sanitizer import get_sanitizer
+from mti_evo.server.router import ControlPlaneRouter
+
+# Plugin: IDRE Security
+try:
+    from mti_evo_plugins.idre.sanitizer import get_sanitizer
+except ImportError:
+    # Build a dummy sanitizer if plugin missing?
+    # Or just warn.
+    print("⚠️ IDRE Plugin not found. Security features disabled.")
+    def get_sanitizer(path=None): return None
 
 class UnifiedHandler(BaseHTTPRequestHandler):
     """

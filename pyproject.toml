@@ -23,4 +23,4 @@ mti-substrate = "mti_evo.server.substrate:run_substrate_server" # Legacy alias
 mti-setup = "mti_evo.setup:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
