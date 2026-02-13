@@ -86,7 +86,7 @@ Engines are dynamically discovered via the registry system.
 
 ---
 
-4. Substrate Runtime
+### 4. Substrate Runtime
 
 The substrate server architecture separates:
 
@@ -108,7 +108,7 @@ Controlled concurrency
 
 ---
 
-🚀 Installation
+### 🚀 Installation
 git clone https://github.com/Gastroam/MTI-EVO.git
 cd MTI-EVO
 pip install -e .[dev]
@@ -116,11 +116,11 @@ pip install -e .[dev]
 
 Python 3.11 required
 
-🧪 Run Tests
+### 🧪 Run Tests
 pytest
 
 
-Architecture boundary checks:
+### Architecture boundary checks:
 
 pytest tests/architecture
 
@@ -129,7 +129,7 @@ Type checking:
 
 mypy src/mti_evo/core/persistence/backend.py
 
-🌐 Run Substrate Server
+### 🌐 Run Substrate Server
 mti-substrate
 
 
