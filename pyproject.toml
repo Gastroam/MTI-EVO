@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mti-evo"
+version = "2.3.5"
+description = "MTI-EVO: Holographic Lattice Cognitive Mesh"
+requires-python = ">=3.10"
+dependencies = [
+    "rich",
+    "cryptography",
+    # "fastecdsa", # Requires C compiler, using pure python or cryptography instead
+    "pynvml",
+    "llama-cpp-python"
+]
+
+[project.scripts]
+mti-evo = "mti_evo.cli:main"
+mti-server = "mti_evo.server:main"
+mti-substrate = "mti_evo.substrate_server:run_substrate_server"
+mti-setup = "mti_evo.setup:main"
+mti-node = "mti_evo.mti_hive_node:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

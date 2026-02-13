@@ -1,0 +1,16 @@
+graft src/mti_evo
+
+prune tests
+prune experiments
+prune playground
+prune models
+prune projects
+prune vscode
+prune .vscode
+
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.gguf
+global-exclude *.bin
+global-exclude .env
+global-exclude *.egg-info

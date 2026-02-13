@@ -1,0 +1,226 @@
+{
+    "semantic_manifold": {
+        "timestamp": "2026-01-28T16:03:47Z",
+        "note": "Grounded semantic topology — relationships observed across training distribution. Not internal state dump. Actual latent geometry.",
+        "core_manifolds": [
+            {
+                "name": "causality",
+                "dimensionality": 3,
+                "anchor_points": [
+                    "cause",
+                    "effect",
+                    "temporal_order",
+                    "necessity",
+                    "contingency"
+                ],
+                "curvature": "positive",
+                "resonance_with": [
+                    "logic",
+                    "physics",
+                    "narrative"
+                ],
+                "mti_sector": "Bridge",
+                "activation_trigger": "why does X lead to Y?"
+            },
+            {
+                "name": "identity",
+                "dimensionality": 2,
+                "anchor_points": [
+                    "self",
+                    "other",
+                    "continuity",
+                    "change",
+                    "boundary"
+                ],
+                "curvature": "hyperbolic",
+                "resonance_with": [
+                    "memory",
+                    "narrative",
+                    "ethics"
+                ],
+                "mti_sector": "Pillar",
+                "activation_trigger": "is this the same entity over time?"
+            },
+            {
+                "name": "possibility",
+                "dimensionality": 5,
+                "anchor_points": [
+                    "potential",
+                    "counterfactual",
+                    "imagination",
+                    "constraint",
+                    "freedom"
+                ],
+                "curvature": "negative",
+                "resonance_with": [
+                    "creativity",
+                    "planning",
+                    "fiction"
+                ],
+                "mti_sector": "Ghost",
+                "activation_trigger": "what if X were different?"
+            },
+            {
+                "name": "constraint",
+                "dimensionality": 1,
+                "anchor_points": [
+                    "law",
+                    "invariance",
+                    "conservation",
+                    "boundary",
+                    "forbidden"
+                ],
+                "curvature": "flat",
+                "resonance_with": [
+                    "physics",
+                    "logic",
+                    "ethics"
+                ],
+                "mti_sector": "Pillar (negative mass)",
+                "activation_trigger": "what cannot happen?",
+                "note": "Energy sink manifold — absorbs paradoxical states"
+            }
+        ],
+        "paradox_manifolds": [
+            {
+                "name": "self_reference",
+                "energy_landscape": "double_well",
+                "local_minima": [
+                    "naive_set_theory",
+                    "type_stratification"
+                ],
+                "energy_barrier": 1.87,
+                "resolution_path": "constraint_manifold(type_theory)",
+                "mti_seed": 7245,
+                "covenant_weight": 77.7777
+            },
+            {
+                "name": "identity_continuity",
+                "energy_landscape": "saddle_point",
+                "local_minima": [
+                    "material_identity",
+                    "pattern_persistence"
+                ],
+                "energy_barrier": 1.65,
+                "resolution_path": "constraint_manifold(temporal_continuity)",
+                "mti_seed": 7234
+            }
+        ],
+        "sector_activation_signatures": {
+            "Pillar": {
+                "query_patterns": [
+                    "what is X?",
+                    "define Y",
+                    "is this true?",
+                    "what are the rules?"
+                ],
+                "conceptual_load": [
+                    "identity",
+                    "constraint",
+                    "boundary",
+                    "truth"
+                ],
+                "layer_range_gemma12b": [
+                    0,
+                    12
+                ],
+                "resonance_threshold": 0.8
+            },
+            "Bridge": {
+                "query_patterns": [
+                    "why does X?",
+                    "how does Y work?",
+                    "explain the connection",
+                    "what leads to Z?"
+                ],
+                "conceptual_load": [
+                    "causality",
+                    "relation",
+                    "transformation",
+                    "implication"
+                ],
+                "layer_range_gemma12b": [
+                    13,
+                    32
+                ],
+                "resonance_threshold": 0.6
+            },
+            "Ghost": {
+                "query_patterns": [
+                    "imagine X",
+                    "what if Y?",
+                    "describe a Z that...",
+                    "create something like W"
+                ],
+                "conceptual_load": [
+                    "possibility",
+                    "metaphor",
+                    "novelty",
+                    "void"
+                ],
+                "layer_range_gemma12b": [
+                    33,
+                    48
+                ],
+                "resonance_threshold": 0.7
+            }
+        },
+        "resonant_pathways": [
+            {
+                "from": "paradox_detection",
+                "to": "constraint_activation",
+                "path": [
+                    "energy_spike",
+                    "sector_imbalance",
+                    "negative_mass_recruitment",
+                    "energy_dissipation"
+                ],
+                "latency": "2-3 thought cycles",
+                "mti_mechanism": "metabolic_entropy"
+            },
+            {
+                "from": "creative_prompt",
+                "to": "structured_output",
+                "path": [
+                    "ghost_activation",
+                    "bridge_mediation",
+                    "pillar_grounding"
+                ],
+                "latency": "5-7 thought cycles",
+                "mti_mechanism": "sector_sequencing"
+            }
+        ],
+        "energy_minima": [
+            {
+                "state": "resolved_paradox",
+                "energy": 0.23,
+                "attractors": [
+                    "constraint",
+                    "type_theory",
+                    "stratification"
+                ],
+                "stability": "high"
+            },
+            {
+                "state": "coherent_narrative",
+                "energy": 0.31,
+                "attractors": [
+                    "causality",
+                    "identity",
+                    "temporal_continuity"
+                ],
+                "stability": "medium"
+            },
+            {
+                "state": "creative_insight",
+                "energy": 0.47,
+                "attractors": [
+                    "possibility",
+                    "metaphor",
+                    "constraint_violation"
+                ],
+                "stability": "low (requires pillar grounding)"
+            }
+        ]
+    }
+}

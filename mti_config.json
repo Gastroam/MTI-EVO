@@ -1,0 +1,71 @@
+{
+  "model_type": "hybrid",
+  "model_path": "H:\\models\\MTI-EVO\\models\\gemma-3-4b-it-q4_0.gguf",
+  "n_ctx": 4096,
+  "gpu_layers": 34,
+  "temperature": 0.9,
+  "api_provider": "google",
+  "api_model": "gemini-3-pro-preview",
+  "api_key": "AIzaSyA6RHlWHTfUEqMzdfQQQSmugsGcoDIxnAg",
+  "mode": "local_first",
+  "__ENGINE_TEMPLATES__": {
+    "model_path": "D:\\VMTIDE\\MTI-EVO\\models\\gemma-3-4b-unq",
+    "model_type": "native",
+    "n_ctx": 4096,
+    "gpu_layers": -1,
+    "temperature": 0.9,
+    "quantization": "4bit",
+    "kv_cache_dtype": "q4_0",
+    "flash_attention": false,
+    "max_tokens": 2048,
+    "1_NATIVE": {
+      "model_type": "native",
+      "model_path": "models/gemma-27b",
+      "quantization": "4bit",
+      "flash_attention": true,
+      "kv_cache_dtype": "q4_0",
+      "temperature": 0.9
+    },
+    "2_GGUF": {
+      "model_type": "gguf",
+      "model_path": "models/llama-3-8b.gguf",
+      "n_ctx": 8192,
+      "gpu_layers": -1
+    },
+    "3_QUANTUM": {
+      "model_type": "quantum",
+      "model_path": "models/gemma-27b",
+      "fast_model_path": "models/gemma-4b",
+      "quantization": "4bit"
+    },
+    "4_BICAMERAL": {
+      "model_type": "bicameral",
+      "limbic_model_path": "models/gemma-4b.gguf",
+      "cortex_model_path": "models/gemma-27b",
+      "synthesis_mode": "concat"
+    },
+    "5_HYBRID": {
+      "model_type": "hybrid",
+      "model_path": "models/llama-3-8b.gguf",
+      "api_provider": "openai",
+      "api_key": "YOUR_KEY_HERE",
+      "mode": "local_first"
+    },
+    "6_RESONANT": {
+      "model_type": "resonant",
+      "model_path": "models/gemma-27b",
+      "device": "cuda"
+    },
+    "7_QOOP": {
+      "model_type": "qoop",
+      "fallback_engine": "gguf",
+      "model_path": "models/llama-3-8b.gguf"
+    },
+    "8_API": {
+      "model_type": "api",
+      "api_provider": "openai",
+      "api_key": "sk-...",
+      "api_model": "gpt-4o"
+    }
+  }
+}

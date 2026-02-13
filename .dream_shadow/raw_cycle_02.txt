@@ -1,0 +1,36 @@
+--- CYCLE 2 ---
+1.  The code scans the `todo.txt` file for TODO comments and prints the lines containing them in a cyan-colored panel.
+2.  ```python
+import console
+import os
+
+def scan_todos(filename="todo.txt"):
+    """
+    Scans a file for TODO comments and prints them in a cyan-colored panel.
+
+    Args:
+        filename (str, optional): The name of the file to scan. Defaults to "todo.txt".
+    """
+    try:
+        with open(filename, "r") as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        console.print(Panel.fit("[red]Error:[/red] File not found: {}".format(filename), border_style="red"))
+        return
+
+    todo_lines = []
+    for line in lines:
+        line = line.strip()
+        if line.startswith("# TODO"):
+            todo_lines.append(line)
+
+    if todo_lines:
+        with console.status("[bold cyan]Scanning for scenarios..."):
+            for line in todo_lines:
+                console.print(Panel.fit(line, border_style="cyan"))
+    else:
+        console.print(Panel.fit("[yellow]No TODOs found in {}".format(filename), border_style="yellow"))
+
+if __name__ == "__main__":
+    scan_todos()
+    ```

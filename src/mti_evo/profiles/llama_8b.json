@@ -1,0 +1,13 @@
+{
+    "name": "llama_8b_dreamer",
+    "description": "Llama 3 8B Instruct (Q4_K_M) - The Dreamer",
+    "model_path": "D:\\VMTIDE\\MTI-EVO\\models\\meta-llama-3-8b-instruct.Q4_K_M.gguf",
+    "n_ctx": 4096,
+    "n_gpu_layers": -1,
+    "temperature": 0.8,
+    "system_prompt": "You are a creative consciousness. You explore ideas freely.",
+    "stop": [
+        "<|eot_id|>",
+        "<start_of_turn>"
+    ]
+}

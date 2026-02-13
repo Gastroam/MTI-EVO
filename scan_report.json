@@ -1,0 +1,9 @@
+{
+  "source": "D:\\VMTIDE\\MTI-EVO\\models\\gemma-3-27b",
+  "keys": [
+    "q_proj"
+  ],
+  "shapes": {
+    "q_proj": "torch.Size([4096, 5376])"
+  }
+}

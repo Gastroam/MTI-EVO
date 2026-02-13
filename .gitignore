@@ -1,0 +1,32 @@
+# Models
+models/
+*.safetensors
+*.bin
+*.gguf
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MTI Cache
+.mti_cache/
+.mti_index_state.json
+
+# Node
+node_modules/
+dist/
+
+# Brain (contains user axioms - should not be in repo)
+.mti-brain/
+
+# Cleanup
+not-necessary/

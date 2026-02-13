@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: mti-evo
+Version: 2.3.0
+Summary: MTI-EVO: Holographic Lattice Cognitive Mesh
+Requires-Python: >=3.10
+Requires-Dist: rich
+Requires-Dist: cryptography
+Requires-Dist: pynvml
+Requires-Dist: llama-cpp-python

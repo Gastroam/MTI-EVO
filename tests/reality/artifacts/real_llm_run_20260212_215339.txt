@@ -1,0 +1,32 @@
+REAL LLM RUN 20260212_215339
+Model: H:\models\gemma-3-4b-it-q4_0.gguf
+Backend: gguf
+Load ms: 2336.09
+
+--- SAMPLE 1 ---
+PROMPT: Explain in one paragraph why deterministic seeds matter in neural experiments.
+OK: True
+LATENCY_MS: 12692.92
+TOKENS: 80
+RESPONSE:
+Deterministic seeds are crucial in neural experiments because they guarantee reproducibility. By setting a specific seed for the random number generator used throughout the training process – including data shuffling, weight initialization, and dropout – you ensure that the same input data and model architecture will always produce the exact same results. This allows researchers to reliably compare different experiments, debug issues, and verify that changes in the model are truly responsible for observed
+
+--- SAMPLE 2 ---
+PROMPT: Describe how eviction pressure impacts long-term memory stability in sparse attractor systems.
+OK: True
+LATENCY_MS: 11979.36
+TOKENS: 80
+RESPONSE:
+Okay, let's dive into the fascinating intersection of eviction pressure, long-term memory, and sparse attractor systems. This is a relatively cutting-edge area of research in neuroscience, particularly concerning how the brain consolidates and maintains memories. Here's a breakdown of how eviction pressure can destabilize long-term memory stability in these systems, incorporating the key concepts:
+
+**1. Sparse Att
+
+--- SAMPLE 3 ---
+PROMPT: Give a concise method section paragraph for reporting reproducible LLM experiments.
+OK: True
+LATENCY_MS: 12288.93
+TOKENS: 80
+RESPONSE:
+Here’s a concise method section paragraph for reporting reproducible LLM experiments, aiming for clarity and detail:
+
+“We conducted experiments using the [LLM Model Name] model, accessed via the [API/Library/Platform] at [Version Number].  All experiments were performed on a [Hardware Configuration - e.g., NVIDIA A100 GPU] and utilized [Software Environment - e

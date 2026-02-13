@@ -1,0 +1,445 @@
+/**
+ * MTI-EVO Cyberpunk HUD Overlay
+ * AR-style visual effects for immersive command interface
+ */
+
+/* ═══════════════════════════════════════════
+   HEXAGONAL GRID BACKGROUND
+   ═══════════════════════════════════════════ */
+.hex-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300f3ff' fill-opacity='0.4'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    animation: hex-drift 60s linear infinite;
+}
+
+@keyframes hex-drift {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 56px 98px;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   SCANLINE OVERLAY
+   ═══════════════════════════════════════════ */
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 243, 255, 0.1) 2px,
+            rgba(0, 243, 255, 0.1) 4px);
+    animation: scanline-flicker 0.1s infinite;
+}
+
+@keyframes scanline-flicker {
+
+    0%,
+    100% {
+        opacity: 0.03;
+    }
+
+    50% {
+        opacity: 0.05;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   AR CORNER BRACKETS
+   ═══════════════════════════════════════════ */
+.ar-frame {
+    /* Position handled by component itself (fixed/absolute) */
+}
+
+.ar-frame::before,
+.ar-frame::after,
+.ar-frame .ar-corner-bl,
+.ar-frame .ar-corner-br {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-cyan);
+    pointer-events: none;
+    animation: corner-pulse 2s ease-in-out infinite;
+}
+
+.ar-frame::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.ar-frame::after {
+    top: -2px;
+    right: -2px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.ar-frame .ar-corner-bl {
+    bottom: -2px;
+    left: -2px;
+    border-right: none;
+    border-top: none;
+}
+
+.ar-frame .ar-corner-br {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
+}
+
+@keyframes corner-pulse {
+
+    0%,
+    100% {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 5px var(--accent-cyan);
+    }
+
+    50% {
+        border-color: var(--accent-magenta);
+        box-shadow: 0 0 10px var(--accent-magenta);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   TARGET LOCK RETICLE
+   ═══════════════════════════════════════════ */
+.target-lock {
+    position: fixed;
+    width: 80px;
+    height: 80px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.target-lock.active {
+    opacity: 1;
+}
+
+.target-lock svg {
+    width: 100%;
+    height: 100%;
+    animation: reticle-spin 4s linear infinite;
+}
+
+.target-lock circle {
+    fill: none;
+    stroke: var(--accent-cyan);
+    stroke-width: 1.5;
+    stroke-dasharray: 10 5;
+}
+
+.target-lock .crosshair {
+    stroke: var(--accent-magenta);
+    stroke-width: 1;
+}
+
+@keyframes reticle-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   THREAT LEVEL INDICATOR
+   ═══════════════════════════════════════════ */
+.threat-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 460px;
+    /* Clear console panel */
+    transform: none;
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    z-index: 100;
+}
+
+.threat-bar {
+    width: 8px;
+    height: 24px;
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.threat-bar.active {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+.threat-bar.warning {
+    background: var(--accent-yellow);
+    box-shadow: 0 0 8px var(--accent-yellow);
+}
+
+.threat-bar.critical {
+    background: var(--accent-red);
+    box-shadow: 0 0 8px var(--accent-red);
+    animation: threat-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes threat-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   DATA STREAM (Vertical Text Rain)
+   ═══════════════════════════════════════════ */
+.data-stream {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+    opacity: 0.1;
+}
+
+.data-column {
+    position: absolute;
+    top: -100%;
+    width: 20px;
+    font-family: 'Rajdhani', monospace;
+    font-size: 14px;
+    color: var(--accent-cyan);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    animation: data-fall 15s linear infinite;
+    text-shadow: 0 0 5px var(--accent-cyan);
+}
+
+@keyframes data-fall {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(200vh);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   GLASSMORPHISM PANELS
+   ═══════════════════════════════════════════ */
+.glass-panel {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 243, 255, 0.2) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 20px rgba(0, 243, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════
+   GLOW EFFECTS
+   ═══════════════════════════════════════════ */
+.neon-glow {
+    text-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor,
+        0 0 20px currentColor;
+}
+
+.neon-border {
+    box-shadow:
+        0 0 5px var(--accent-cyan),
+        0 0 10px var(--accent-cyan),
+        inset 0 0 5px rgba(0, 243, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════
+   SYSTEM VITALS CIRCULAR GAUGES
+   ═══════════════════════════════════════════ */
+.vitals-container {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 50;
+}
+
+.vital-gauge {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.vital-gauge svg {
+    transform: rotate(-90deg);
+}
+
+.vital-gauge circle {
+    fill: none;
+    stroke-width: 4;
+}
+
+.vital-gauge .bg {
+    stroke: rgba(100, 116, 139, 0.2);
+}
+
+.vital-gauge .fill {
+    stroke: var(--accent-cyan);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease;
+    filter: drop-shadow(0 0 4px var(--accent-cyan));
+}
+
+.vital-gauge .label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.vital-gauge .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+}
+
+/* ═══════════════════════════════════════════
+   PERIPHERAL SCAN ARC
+   ═══════════════════════════════════════════ */
+.scan-arc {
+    position: fixed;
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.scan-arc.top-left {
+    top: 60px;
+    left: 0;
+}
+
+.scan-arc.bottom-right {
+    bottom: 0;
+    right: 0;
+    transform: rotate(180deg);
+}
+
+.scan-arc svg {
+    width: 100%;
+    height: 100%;
+}
+
+.scan-arc path {
+    fill: none;
+    stroke: var(--accent-cyan);
+    stroke-width: 1;
+    opacity: 0.3;
+}
+
+.scan-arc .sweep {
+    stroke: var(--accent-magenta);
+    stroke-width: 2;
+    opacity: 0.8;
+    animation: arc-sweep 3s linear infinite;
+}
+
+@keyframes arc-sweep {
+    0% {
+        stroke-dashoffset: 300;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   POWER-UP ANIMATION
+   ═══════════════════════════════════════════ */
+@keyframes power-up {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+        filter: brightness(2);
+    }
+
+    50% {
+        filter: brightness(1.5);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+.power-up {
+    animation: power-up 0.5s ease-out;
+}
+
+/* ═══════════════════════════════════════════
+   TYPING ANIMATION
+   ═══════════════════════════════════════════ */
+@keyframes blink-caret {
+
+    0%,
+    100% {
+        border-color: transparent;
+    }
+
+    50% {
+        border-color: var(--accent-cyan);
+    }
+}
+
+.typing-effect {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid var(--accent-cyan);
+    animation: blink-caret 0.75s step-end infinite;
+}

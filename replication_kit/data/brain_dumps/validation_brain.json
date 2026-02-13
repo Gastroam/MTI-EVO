@@ -1,0 +1,10 @@
+{
+  "hyperparameters": {
+    "gravity": 20.0,
+    "momentum": 0.9,
+    "decay": 0.15,
+    "learning_rate": 0.5
+  },
+  "active_neurons": 11,
+  "avg_neuron_age": 5.0
+}

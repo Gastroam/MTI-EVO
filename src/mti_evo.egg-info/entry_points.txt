@@ -1,0 +1,6 @@
+[console_scripts]
+mti-evo = mti_evo.cli:main
+mti-node = mti_evo.mti_hive_node:main
+mti-server = mti_evo.server:main
+mti-setup = mti_evo.setup:main
+mti-substrate = mti_evo.substrate_server:run_substrate_server

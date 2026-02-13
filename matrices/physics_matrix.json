@@ -1,0 +1,25 @@
+{
+  "domain": "PHYSICS",
+  "axioms": [
+    {
+      "topic": "Laws of Thermodynamics",
+      "content": "The Laws of Thermodynamics are fundamental principles governing energy transformations and system behavior, universally applicable across scales and conditions. The First Law dictates energy conservation; energy cannot be created or destroyed, only transformed. The Second Law asserts entropy, or disorder, invariably increases in isolated systems, defining a direction of time and limiting efficiency. The Third Law states that achieving absolute zero temperature is theoretically impossible, implying a residual entropy even at lowest energy states."
+    },
+    {
+      "topic": "General Relativity Spacetime Curvature",
+      "content": "General Relativity postulates that spacetime is a four-dimensional manifold dynamically curved by mass-energy distribution, described by the Einstein Field Equations. This curvature dictates the motion of objects, replacing Newtonian gravity with geodesic trajectories through curved spacetime.  The curvature is not merely a backdrop but an intrinsic property affecting all physical phenomena, fundamentally linking gravity to the geometry of spacetime.  Experimental verification, including gravitational lensing and the Mercury anomaly, confirms the predictive accuracy of General Relativity, establishing spacetime curvature as a fundamental aspect of reality."
+    },
+    {
+      "topic": "Standard Model of Particle Physics",
+      "content": "The Standard Model of Particle Physics is a mathematical framework describing fundamental particles and forces, excluding gravity, through the classification of two particle families: fermions (quarks and leptons) and bosons (force carriers). It postulates that all observed subatomic particles are either composite (baryons and mesons) or elementary, exhibiting interactions governed by the strong, weak, and electromagnetic forces, mathematically represented by quantum field theories. Experimental validation, including the 2012 discovery of the Higgs boson, has confirmed the model's predictions with remarkable precision, though it remains incomplete due to its inability to incorporate gravity or explain phenomena like dark matter and neutrino mass.  The Standard Model's mathematical structure is based on gauge symmetry and renormalization, requiring careful consideration of infinities arising from quantum calculations."
+    },
+    {
+      "topic": "Dark Matter and Dark Energy hypotheses",
+      "content": "Dark Matter and Dark Energy are contemporary cosmological hypotheses posited to explain observed gravitational anomalies and the accelerating expansion of the universe, respectively. Dark Matter, comprising ~85% of the universe's mass, is inferred from galactic rotation curves and gravitational lensing, exhibiting no electromagnetic interaction, and is not composed of ordinary baryonic matter. Dark Energy, comprising ~68% of the universe's total energy density, is theorized to be a property of spacetime itself, driving accelerated expansion and exhibiting negative pressure, and is currently best modeled by the cosmological constant.  Neither dark matter nor dark energy has been directly detected, and their precise nature remains a significant unresolved problem in physics, representing a fundamental limitation in our understanding of the universe's composition."
+    },
+    {
+      "topic": "Entropy and Information Theory",
+      "content": "Entropy, fundamentally, quantifies the uncertainty inherent in a random variable's outcome, measured in bits and representing the minimum number of yes/no questions required to determine the variable's value. Information, conversely, reduces this uncertainty by providing a signal that alters probability distributions, thereby decreasing entropy.  Shannon's Information Theory establishes a mathematical framework where entropy is maximized by uniform probability distributions and minimized by deterministic outcomes.  Thus, information is inherently a reduction of entropy, and its quantification is directly linked to the statistical properties of the signal and the system observing it."
+    }
+  ]
+}

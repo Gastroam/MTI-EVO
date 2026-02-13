@@ -1,0 +1,26 @@
+{
+  "statistics": {
+    "pure_weight_mean": 29.37571549504514,
+    "pure_weight_std": 0.0901220462391347,
+    "contaminated_weight_mean": 30.831551823452756,
+    "contaminated_weight_std": 5.1417394985409794,
+    "noise_tolerance_mean": Infinity,
+    "noise_tolerance_std": NaN,
+    "weight_preservation": 1.0495591785212237,
+    "flow_maintenance_rate": 1.0,
+    "hallucination_prevention_rate": 1.0
+  },
+  "interpretation": "STRONG EVIDENCE: System demonstrates robust noise resistance and hallucination prevention.",
+  "raw_results": [
+    "ChimeraTestResult(pure_weight=np.float64(29.42736660662436), contaminated_weight=np.float64(38.149695833934324), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.42736660662436), contaminated_weight=np.float64(27.37407943999718), noise_tolerance_ratio=np.float64(13.331831944853107), maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.42736660662436), contaminated_weight=np.float64(34.63630897643156), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.42736660662436), contaminated_weight=np.float64(33.84177956564344), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.27406429224004), contaminated_weight=np.float64(37.15675174977774), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.27406429224004), contaminated_weight=np.float64(30.870569835954452), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.27406429224004), contaminated_weight=np.float64(30.019089646801785), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.27406429224004), contaminated_weight=np.float64(25.97233644941339), noise_tolerance_ratio=np.float64(7.866286285782456), maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.496206702429532), contaminated_weight=np.float64(31.19894898018717), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)",
+    "ChimeraTestResult(pure_weight=np.float64(29.496206702429532), contaminated_weight=np.float64(33.67156151274224), noise_tolerance_ratio=inf, maintained_flow=np.True_, hallucination_prevented=True)"
+  ]
+}

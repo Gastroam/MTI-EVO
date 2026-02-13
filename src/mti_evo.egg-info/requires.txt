@@ -1,0 +1,4 @@
+rich
+cryptography
+pynvml
+llama-cpp-python

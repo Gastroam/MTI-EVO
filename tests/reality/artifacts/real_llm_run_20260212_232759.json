@@ -1,0 +1,62 @@
+{
+  "timestamp": "20260212_232759",
+  "model_path": "H:\\models\\gemma-3-4b-it-q4_0.gguf",
+  "engine": "gguf",
+  "n_ctx": 1024,
+  "gpu_layers": -1,
+  "max_tokens": 80,
+  "n_batch": 512,
+  "samples": [
+    {
+      "index": 1,
+      "prompt": "Explain in one paragraph why deterministic seeds matter in neural experiments.",
+      "ok": true,
+      "latency_ms": 1531.0468999668956,
+      "tokens": 80,
+      "coherence": 0.95,
+      "gpu_stats": {
+        "name": "NVIDIA GeForce RTX 3070",
+        "vram_used_mb": 5740.52734375,
+        "vram_total_mb": 6144.0,
+        "gpu_util_percent": 73
+      },
+      "response_text": "Deterministic seeds are crucial in neural experiments because they ensure reproducibility. By setting a specific seed for the random number generator used throughout the training process – including data shuffling, weight initialization, and dropout – you guarantee that the same input data and model architecture will always produce the exact same results. Without a fixed seed, even slight variations in the random number generation can lead to dramatically different model parameters, training dynamics,"
+    },
+    {
+      "index": 2,
+      "prompt": "Describe how eviction pressure impacts long-term memory stability in sparse attractor systems.",
+      "ok": true,
+      "latency_ms": 1331.614000024274,
+      "tokens": 80,
+      "coherence": 0.95,
+      "gpu_stats": {
+        "name": "NVIDIA GeForce RTX 3070",
+        "vram_used_mb": 5732.26953125,
+        "vram_total_mb": 6144.0,
+        "gpu_util_percent": 78
+      },
+      "response_text": "Okay, let's delve into the fascinating intersection of eviction pressure, long-term memory, and sparse attractor systems. This is a relatively recent area of research in neuroscience, primarily driven by work on the hippocampus and related brain regions. Here's a breakdown of how eviction pressure impacts long-term memory stability in these systems, combining established theories with current thinking:\n\n**1. Sparse Attractor"
+    },
+    {
+      "index": 3,
+      "prompt": "Give a concise method section paragraph for reporting reproducible LLM experiments.",
+      "ok": true,
+      "latency_ms": 1317.1484000049531,
+      "tokens": 80,
+      "coherence": 0.95,
+      "gpu_stats": {
+        "name": "NVIDIA GeForce RTX 3070",
+        "vram_used_mb": 5728.51953125,
+        "vram_total_mb": 6144.0,
+        "gpu_util_percent": 80
+      },
+      "response_text": "Here’s a concise method section paragraph for reporting reproducible LLM experiments, aiming for clarity and detail:\n\n“We replicated experiments using the [LLM Name] model ([Version Number]) accessed via the [API/Platform] API.  Experiments were conducted on a [Hardware Specification] machine with [Software Environment - e.g., Python 3.9, PyTorch 1.1"
+    }
+  ],
+  "summary": {
+    "sample_count": 3,
+    "failure_count": 0,
+    "avg_latency_ms": 1393.2697666653742,
+    "all_passed": true
+  }
+}
