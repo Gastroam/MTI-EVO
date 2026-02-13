@@ -8,6 +8,7 @@ import os
 import time
 import numpy as np
 
+import threading
 from mti_evo.core.neuron import MTINeuron
 from mti_evo.core.config import MTIConfig
 from mti_evo.core.persistence.mmap import MMapNeuronStore
@@ -42,6 +43,8 @@ class CortexMemory:
             capacity: Max neurons for mmap backend (default: 2^20)
             read_only: If True, blocks write operations (default: False)
         """
+        # [Opt-5] Concurrency Control
+        self.lock = threading.RLock()
         # Determine paths
         if persistence_path:
             self.storage_path = persistence_path
@@ -104,28 +107,43 @@ class CortexMemory:
             print("💤 MEMORY: Read-only mode, skipping consolidation.")
             return
 
-        print("\n💤 INITIATING REM PHASE (Consolidation)...")
-        store = self._get_store()
-        count = 0
-        
-        for seed_id, neuron in active_tissue.items():
-            # Filter: Only save mature neurons (age > 0 or significant weight)
-            if hasattr(neuron, 'weights'):
-                if neuron.age > 0 or abs(np.mean(neuron.weights)) > 0.01:
-                    store.put(
-                        seed=int(seed_id),
-                        weights=neuron.weights,
-                        velocity=neuron.velocity,
-                        bias=float(neuron.bias),
-                        gravity=float(neuron.gravity),
-                        age=int(neuron.age),
-                        last_accessed=time.time()
-                    )
-                    count += 1
-        
-        store.flush()
-        backend_name = "mmap" if isinstance(store, MMapNeuronStore) else "json"
-        print(f"✅ MEMORY SAVED: {count} neurons preserved ({backend_name})")
+        with self.lock:
+            print("\n💤 INITIATING REM PHASE (Consolidation)...")
+            store = self._get_store()
+            count = 0
+            
+            # [Opt-4] Batch Consolidation
+            batch_data = {}
+            
+            for seed_id, neuron in active_tissue.items():
+                # Filter: Only save mature neurons (age > 0 or significant weight)
+                if hasattr(neuron, 'weights'):
+                    if neuron.age > 0 or abs(np.mean(neuron.weights)) > 0.01:
+                        # Prepare state dict (ensure JSON serializable for compatibility)
+                        batch_data[int(seed_id)] = {
+                            "weights": neuron.weights.tolist(),
+                            "velocity": neuron.velocity.tolist(),
+                            "bias": float(neuron.bias),
+                            "gravity": float(neuron.gravity),
+                            "age": int(neuron.age),
+                            "last_accessed": time.time()
+                        }
+
+            if batch_data:
+                # Polymorphic batch update (MMap loops in memory, JSONL appends in one transaction)
+                if hasattr(store, 'upsert_neurons'):
+                    store.upsert_neurons(batch_data)
+                else:
+                    # Fallback for stores without batch support (should not happen with updated backend)
+                    for s, d in batch_data.items():
+                        store.put(s, np.array(d['weights']), np.array(d['velocity']), 
+                                  d['bias'], d['gravity'], d['age'], d['last_accessed'])
+                
+                count = len(batch_data)
+            
+            store.flush()
+            backend_name = "mmap" if isinstance(store, MMapNeuronStore) else "json"
+            print(f"✅ MEMORY SAVED: {count} neurons preserved ({backend_name})")
     
     def recall(self):
         """
@@ -134,7 +152,12 @@ class CortexMemory:
         Returns:
             Dict {seed_id: MTINeuron_Object}
         """
-        store = self._get_store()
+        # Read-only operation, but if store not init, we need lock to init safely?
+        # _get_store is lazy. 
+        # Making _get_store thread-safe or locking here.
+        with self.lock:
+            store = self._get_store()
+            
         restored_tissue = {}
         
         # For mmap, we need to scan for active neurons
@@ -169,7 +192,17 @@ class CortexMemory:
         """
         Direct neuron retrieval (for mmap on-demand loading).
         """
-        store = self._get_store()
+        # Lock-free read path for performance (User accepted constraints)
+        # Assuming store is already init or _get_store handles it?
+        # _get_store is NOT thread safe if called first time in parallel.
+        # But usually main thread inits lattice.
+        
+        if self.store is None:
+            with self.lock:
+                store = self._get_store()
+        else:
+            store = self.store
+            
         data = store.get(seed)
         
         if data is None:
@@ -194,25 +227,28 @@ class CortexMemory:
         if self.read_only:
              return
              
-        store = self._get_store()
-        # Unified Backend API
-        store.put(
-            seed=int(seed),
-            weights=neuron.weights,
-            velocity=neuron.velocity,
-            bias=float(neuron.bias),
-            gravity=float(neuron.gravity),
-            age=int(neuron.age),
-            last_accessed=time.time()
-        )
+        with self.lock:
+            store = self._get_store()
+            # Unified Backend API
+            store.put(
+                seed=int(seed),
+                weights=neuron.weights,
+                velocity=neuron.velocity,
+                bias=float(neuron.bias),
+                gravity=float(neuron.gravity),
+                age=int(neuron.age),
+                last_accessed=time.time()
+            )
     
     def flush(self):
         """Sync to disk."""
-        if self.store:
-            self.store.flush()
+        with self.lock:
+            if self.store:
+                self.store.flush()
     
     def close(self):
         """Clean shutdown."""
-        if self.store:
-            self.store.close()
-            self.store = None
+        with self.lock:
+            if self.store:
+                self.store.close()
+                self.store = None

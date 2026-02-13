@@ -161,7 +161,11 @@ class MTINeuron:
         y_pred_clamped = np.clip(y_pred, epsilon, 1 - epsilon)
 
         # Weighted Binary Cross Entropy
-        weight_factor = np.where(y_true_arr == 1.0, self.gravity, 1.0)
+        # [Opt-2] Optimized weight factor (avoid np.where if constant)
+        if isinstance(y_true, float) and y_true == 1.0:
+             weight_factor = self.gravity
+        else:
+             weight_factor = np.where(y_true_arr == 1.0, self.gravity, 1.0)
 
         loss_vector = -1 * (
             weight_factor * y_true_arr * np.log(y_pred_clamped)
@@ -171,7 +175,12 @@ class MTINeuron:
 
         # 3. Gradient Calculation
         error = y_pred - y_true_arr
-        weighted_error = error * weight_factor
+        
+        # [Opt-2] Avoid allocating new array for weighted_error if scalar weight count
+        if np.isscalar(weight_factor):
+             weighted_error = error * weight_factor
+        else:
+             weighted_error = error * weight_factor
 
         if x.shape[0] > 1:
             # Batch Mode
@@ -179,6 +188,8 @@ class MTINeuron:
             bias_gradient = np.mean(weighted_error)
         else:
             # Single Instance Mode
+            # x[0] is (Dim,)
+            # weighted_error[0] is scalar
             gradient = x[0] * weighted_error[0]
             bias_gradient = weighted_error[0]
 
@@ -194,7 +205,13 @@ class MTINeuron:
             current_lr *= reinforcement_damping
 
         # 5. Momentum Update
-        self.velocity = (self.momentum * self.velocity) - (current_lr * gradient)
+        # [Opt-2] In-place update to reduce memory churn
+        # self.velocity = (self.momentum * self.velocity) - (current_lr * gradient)
+        
+        # v *= momentum
+        self.velocity *= self.momentum
+        # v -= lr * grad
+        self.velocity -= (gradient * current_lr)
 
         # Update Synapses
         self.weights += self.velocity

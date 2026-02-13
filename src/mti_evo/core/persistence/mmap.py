@@ -167,6 +167,42 @@ class MMapNeuronStore:
              
         return True
     
+    def upsert_neurons(self, neurons: dict) -> None:
+        """
+        Batch update/insert. For mmap, just loop.
+        Arg neurons: Dict[seed, data_dict]
+        """
+        for seed, data in neurons.items():
+            # Data dict expects numpy arrays for weights/velocity?
+            # Jsonl passes lists. MMap needs arrays.
+            # We assume data comes from consolidate which extracts from MTINeuron.
+            # However, consolidate builds Dict[seed, MTINeuron].
+            # We should probably standardize the input to upsert_neurons?
+            # Jsonl expects Dict[seed, Dict(serialized)]. 
+            
+            # Let's handle both formats if possible, or enforce serialized dict.
+            # Current usage in jsonl: state['weights'] is list (serialized).
+            
+            # If we pass raw MTINeuron objects, we need to extract.
+            # But CortexMemory.consolidate extracts for us.
+            
+            w = data['weights']
+            v = data['velocity']
+            
+            # Convert list to array if needed
+            if isinstance(w, list): w = np.array(w)
+            if isinstance(v, list): v = np.array(v)
+            
+            self.put(
+                seed=int(seed),
+                weights=w,
+                velocity=v,
+                bias=float(data['bias']),
+                gravity=float(data['gravity']),
+                age=int(data['age']),
+                last_accessed=float(data['last_accessed'])
+            )
+    
     def delete(self, seed: int):
         offset = self._offset(seed)
         meta_start = offset + (self.dim * 8)

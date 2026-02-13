@@ -232,41 +232,54 @@ class HolographicLattice:
         labels: Optional dict mapping {seed: "Label"} to assigning meaning to neurons.
         """
         start_time = time.time()
-        layer_response_pre = []
-        layer_response_post = []
-        evictions = 0
-
+        
+        # [Opt-1.2] Localize attributes for hot-path speed
+        active_tissue = self.active_tissue
+        config = self.config
+        rng = self.rng
+        time_fn = self.time_fn
+        telemetry = self.telemetry
+        persistence_manager = self.persistence_manager
+        capacity_limit = self.capacity_limit
+        anchor_manager = self.anchor_manager
+        
         # Pre-process Input Signal
         x_in = np.atleast_2d(input_signal)
         input_size = x_in.shape[1]
 
-        x_in = np.atleast_2d(input_signal)
-        input_size = x_in.shape[1]
-
         self.step_counter += 1
-        if self.anchor_manager:
-            self.anchor_manager.check_and_reinforce(self, self.step_counter)
+        if anchor_manager:
+            anchor_manager.check_and_reinforce(self, self.step_counter)
 
-        for seed in seed_stream:
+        # [Opt-1.1] Pre-allocate lists
+        num_seeds = len(seed_stream)
+        layer_response_pre = [0.0] * num_seeds
+        # Only allocate post array if learning, otherwise empty list
+        layer_response_post = [0.0] * num_seeds if learn else []
+        
+        evictions = 0
+
+        for i, seed in enumerate(seed_stream):
+            # [Opt-1.3] Minimize dict lookup
+            neuron = active_tissue.get(seed)
+            
             # 1. NEUROGENESIS (Lazy Instantiation)
-            if seed not in self.active_tissue:
+            if neuron is None:
                 # [LAZY LOADING] Check Hippocampus first
                 loaded_neuron = None
-                if self.persistence_manager:
-                    loaded_neuron = self.persistence_manager.get_neuron(seed)
+                if persistence_manager:
+                    loaded_neuron = persistence_manager.get_neuron(seed)
 
                 if loaded_neuron:
                     # RECALL: Found in MMAP/WAL
                     if isinstance(loaded_neuron, dict):
                         # Rehydrate from dict
-                        # We need to create a new neuron and populate it
-                        # This duplicates logic in load() - refactor candidate
                         n = MTINeuron(
                             input_size=input_size,
-                            config=self.config,
+                            config=config,
                             trainable_bias=True,
-                            rng=self.rng,
-                            time_fn=self.time_fn
+                            rng=rng,
+                            time_fn=time_fn
                         )
                         n.weights = np.array(loaded_neuron['weights'])
                         n.velocity = np.array(loaded_neuron['velocity'])
@@ -276,53 +289,52 @@ class HolographicLattice:
                         n.last_accessed = loaded_neuron.get('last_accessed', 0.0)
                         if 'label' in loaded_neuron:
                              n.label = loaded_neuron['label']
-                        self.active_tissue[seed] = n
+                        active_tissue[seed] = n
+                        neuron = n
                     else:
                         # Assume it's already an object (legacy support)
-                        self.active_tissue[seed] = loaded_neuron
+                        active_tissue[seed] = loaded_neuron
+                        neuron = loaded_neuron
                 else:
                     # GENESIS: New Concept
-                    if len(self.active_tissue) >= self.capacity_limit:
+                    if len(active_tissue) >= capacity_limit:
+                        # Note: _prune_weakest modifies self.active_tissue (which is active_tissue)
                         evictions += int(self._prune_weakest())
 
                     # If we are pruning, we might have freed space.
-                    if len(self.active_tissue) >= self.capacity_limit:
-                        layer_response_pre.append(0.0)
-                        if learn:
-                            layer_response_post.append(0.0)
+                    if len(active_tissue) >= capacity_limit:
+                        # Capacity full and eviction failed (or pinned), skip this seed
+                        # Pre-allocated vals are 0.0, so just continue
                         continue
 
                     # Pass config + lattice rng to new neuron.
-                    self.active_tissue[seed] = MTINeuron(
+                    n = MTINeuron(
                         input_size=input_size,
-                        config=self.config,
+                        config=config,
                         trainable_bias=True,
-                        rng=self.rng,         # Shared Lattice RNG
-                        time_fn=self.time_fn  # Shared Time Source
+                        rng=rng,         # Shared Lattice RNG
+                        time_fn=time_fn  # Shared Time Source
                     )
-                    if self.telemetry:
-                        self.telemetry.record_neurogenesis()
+                    active_tissue[seed] = n
+                    neuron = n
+                    
+                    if telemetry:
+                        telemetry.record_neurogenesis()
 
             # [PHASE 27] Semantic Labeling
-            # If a label is provided for this seed, stamp it onto the neuron (DNA).
             if labels and seed in labels:
-                self.active_tissue[seed].label = labels[seed]
-
-            neuron = self.active_tissue[seed]
+                neuron.label = labels[seed]
 
             # 2. ACTIVATION (Perception - First Impression)
-            # Measure Resonance BEFORE training to capture Curiosity/Surprise.
             output_pre = neuron.perceive(x_in)
-            layer_response_pre.append(float(np.mean(np.atleast_1d(output_pre))))
+            # Direct assignment to pre-allocated list
+            layer_response_pre[i] = float(np.mean(np.atleast_1d(output_pre)))
 
             # 3. ADAPTATION (Learning)
-            # If we are in Learning Mode, we train the neuron to output HIGH (1.0)
-            # for this pattern. We are creating an Attractor.
             if learn:
-                # Target is Resonance (1.0) - "I recognize this."
                 neuron.adapt(x_in, y_true=1.0)
                 output_post = neuron.perceive(x_in)
-                layer_response_post.append(float(np.mean(np.atleast_1d(output_post))))
+                layer_response_post[i] = float(np.mean(np.atleast_1d(output_post)))
 
         avg_resonance_pre = float(np.mean(layer_response_pre)) if layer_response_pre else 0.0
         avg_resonance_post = (
@@ -332,7 +344,7 @@ class HolographicLattice:
 
         metrics = {
             "avg_resonance_pre": avg_resonance_pre,
-            "active_count": len(self.active_tissue),
+            "active_count": len(active_tissue),
             "evictions": evictions,
             "latency_ms": duration_ms,
         }
@@ -341,14 +353,14 @@ class HolographicLattice:
         self.last_stimulation_metrics = metrics
 
         # Telemetry Recording
-        if self.telemetry:
-            self.telemetry.record_pulse(
-                active_count=len(self.active_tissue),
+        if telemetry:
+            telemetry.record_pulse(
+                active_count=len(active_tissue),
                 resonance=avg_resonance_pre,
                 duration_ms=duration_ms,
             )
 
-        if getattr(self.config, "stimulate_return_metrics", False):
+        if getattr(config, "stimulate_return_metrics", False):
             return metrics
         return avg_resonance_pre
 
