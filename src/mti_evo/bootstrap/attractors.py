@@ -26,7 +26,7 @@ def ensure_proven_attractors(cortex):
     for p in proven:
         seed = p["seed"]
         if seed not in cortex.active_tissue:
-            print(f"🔧 Restoring Proven Attractor: {p['label']} ({seed})")
+            print(f"[BOOTSTRAP] Restoring proven attractor: {p['label']} ({seed})")
             # Create the neuron via stimulation
             cortex.stimulate([seed], input_signal=np.ones(dim), learn=True)
             
@@ -58,7 +58,7 @@ def ensure_cultural_attractors(cortex, root_dir):
         with open(bank_path, 'r') as f:
             culture_bank = json.load(f)
             
-        print(f"🎨 Injecting {len(culture_bank)} Cultural Attractors...")
+        print(f"[BOOTSTRAP] Injecting {len(culture_bank)} cultural attractors...")
         
         # Get dim
         dim = getattr(cortex.config, 'embedding_dim', 64)
@@ -82,4 +82,4 @@ def ensure_cultural_attractors(cortex, root_dir):
                 neuron.bias = 0.0 # Balanced bias
                 
     except Exception as e:
-        print(f"⚠️ Failed to inject culture: {e}")
+        print(f"[BOOTSTRAP] Failed to inject culture: {e}")

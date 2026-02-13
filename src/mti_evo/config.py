@@ -9,6 +9,9 @@ Environment Variables:
 """
 import json
 import os
+from typing import Any, Dict, Mapping, Union
+
+from mti_evo.core.config import MTIConfig
 
 CONFIG_FILE = "mti_config.json"
 
@@ -37,7 +40,6 @@ DEFAULT_CONFIG = {
     "gpu_layers": -1,
     "api_provider": "openai",
     "api_model": "gpt-4o-mini",
-    "api_model": "gpt-4o-mini",
     "mode": "local_first",
     "enable_hive": False,
     "enable_ghost": False,
@@ -64,8 +66,8 @@ ENV_MAPPING = {
 }
 
 
-def load_config():
-    """Load configuration with priority: ENV > File > Defaults."""
+def load_config() -> MTIConfig:
+    """Load configuration with priority: ENV > file > defaults."""
     # Start with defaults
     config = dict(DEFAULT_CONFIG)
     
@@ -94,13 +96,26 @@ def load_config():
         "google": os.environ.get("GOOGLE_API_KEY", ""),
     }
     
-    return config
+    return MTIConfig.from_dict(config)
 
 
-def save_config(new_config):
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, set):
+        return sorted(list(value))
+    if isinstance(value, tuple):
+        return list(value)
+    return value
+
+
+def save_config(new_config: Union[MTIConfig, Mapping[str, Any]]):
     """Save configuration to file (excludes API keys for security)."""
+    if isinstance(new_config, MTIConfig):
+        config_dict = new_config.to_dict(include_private=True)
+    else:
+        config_dict = dict(new_config)
+
     # Remove sensitive data before saving
-    safe_config = {k: v for k, v in new_config.items() if not k.startswith("_")}
+    safe_config = {k: _json_safe(v) for k, v in config_dict.items() if not k.startswith("_")}
     
     # Merge with existing to prevent data loss
     current = {}
@@ -116,7 +131,7 @@ def save_config(new_config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(updated, f, indent=2)
     
-    return updated
+    return MTIConfig.from_dict(updated)
 
 
 def get_api_key(provider: str) -> str:
@@ -134,9 +149,7 @@ def print_config_summary():
     config = load_config()
     print("\n[MTI-EVO Configuration]")
     print("-" * 40)
-    for key, value in config.items():
-        if key.startswith("_"):
-            continue
+    for key, value in config.to_dict().items():
         if key == "engine_defaults":
             continue
         print(f"  {key}: {value}")
@@ -145,7 +158,7 @@ def print_config_summary():
     print("\n[API Keys]")
     for provider in ["openai", "anthropic", "google"]:
         key = get_api_key(provider)
-        status = "✅ Set" if key else "❌ Not set"
+        status = "set" if key else "not set"
         print(f"  {provider}: {status}")
     print("-" * 40)
 

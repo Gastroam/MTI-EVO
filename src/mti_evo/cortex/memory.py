@@ -74,9 +74,9 @@ class CortexMemory:
         if not os.path.exists(self.base_path):
             try:
                 os.makedirs(self.base_path)
-                print(f"🧠 MEMORY: New brain tissue created at {self.base_path}")
+                print(f"[MEMORY] New brain tissue created at {self.base_path}")
             except OSError as e:
-                print(f"❌ CRITICAL ERROR: Could not create directory. {e}")
+                print(f"[MEMORY] CRITICAL ERROR: Could not create directory. {e}")
         
         self.dim = dim
         self.capacity = capacity
@@ -104,11 +104,11 @@ class CortexMemory:
             active_tissue: Dict {seed_id: MTINeuron_Object}
         """
         if self.read_only:
-            print("💤 MEMORY: Read-only mode, skipping consolidation.")
+            print("[MEMORY] Read-only mode, skipping consolidation.")
             return
 
         with self.lock:
-            print("\n💤 INITIATING REM PHASE (Consolidation)...")
+            print("\n[MEMORY] Initiating REM phase (consolidation)...")
             store = self._get_store()
             count = 0
             
@@ -143,7 +143,7 @@ class CortexMemory:
             
             store.flush()
             backend_name = "mmap" if isinstance(store, MMapNeuronStore) else "json"
-            print(f"✅ MEMORY SAVED: {count} neurons preserved ({backend_name})")
+            print(f"[MEMORY] Saved: {count} neurons preserved ({backend_name})")
     
     def recall(self):
         """
@@ -165,7 +165,7 @@ class CortexMemory:
             # Scan approach: iterate through stored neurons
             # This is a limitation - mmap doesn't naturally enumerate
             # For now, return empty and let callers handle on-demand loading
-            print("🧠 MMAP: Direct substrate access enabled (on-demand loading)")
+            print("[MEMORY] MMAP direct substrate access enabled (on-demand loading)")
             return restored_tissue
         
         # JSON: reconstruct all neurons
@@ -184,7 +184,7 @@ class CortexMemory:
                         neuron.age = data['age']
                         restored_tissue[seed] = neuron
             
-            print(f"⚡ RECALL SUCCESS: {len(restored_tissue)} neurons revived")
+            print(f"[MEMORY] Recall success: {len(restored_tissue)} neurons revived")
         
         return restored_tissue
     

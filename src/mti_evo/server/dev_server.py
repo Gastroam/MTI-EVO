@@ -5,17 +5,13 @@ Legacy/Dev server running everything in a single process.
 Connects VRAM, API, and HTTP in one loop.
 """
 import socketserver
-import threading
-import time
 import os
-import sys
 from http.server import BaseHTTPRequestHandler
 import json
 
-from mti_evo.core.config import MTIConfig
+from mti_evo.config import load_config
 from mti_evo.engines.registry import EngineRegistry, discover_engines
 from mti_evo.server.playground import PlaygroundManager
-from mti_evo.server.router import ControlPlaneRouter
 from mti_evo.server.router import ControlPlaneRouter
 
 # Plugin: IDRE Security
@@ -24,7 +20,7 @@ try:
 except ImportError:
     # Build a dummy sanitizer if plugin missing?
     # Or just warn.
-    print("⚠️ IDRE Plugin not found. Security features disabled.")
+    print("[WARN] IDRE plugin not found. Security features disabled.")
     def get_sanitizer(path=None): return None
 
 class UnifiedHandler(BaseHTTPRequestHandler):
@@ -96,22 +92,23 @@ class UnifiedHandler(BaseHTTPRequestHandler):
 class UnifiedServer:
     def __init__(self, port=8800):
         self.port = port
-        self.config = MTIConfig()
+        self.config = load_config()
         
         # Load LLM Locally (Unified Mode)
         discover_engines()
-        # Heuristic for default engine in dev mode
-        engine_type = "gguf" # Default
-        if hasattr(self.config, 'engine_type'): engine_type = self.config.engine_type
+        engine_type = self.config.model_type
+        if engine_type == "auto":
+            engine_type = "gguf"
         
         try:
-             self.llm = EngineRegistry.create(engine_type, self.config)
+             engine_cfg = self.config.to_dict(include_private=True)
+             self.llm = EngineRegistry.create(engine_type, engine_cfg)
              # Auto-load in dev mode? 
              # Protocol says load(config).
-             self.llm.load(self.config)
-             print(f"   ✅ Engine Loaded: {engine_type}")
+             self.llm.load(engine_cfg)
+             print(f"   [OK] Engine loaded: {engine_type}")
         except Exception as e:
-             print(f"   ⚠️ Engine Load Failed: {e}")
+             print(f"   [WARN] Engine load failed: {e}")
              self.llm = None
         
         # Shared Components (Runtime)
@@ -131,7 +128,7 @@ class UnifiedServer:
         UnifiedHandler.sanitizer = get_sanitizer()
 
     def start(self):
-        print(f"🦄 MTI-EVO Unified Server (Dev Mode) on {self.port}")
+        print(f"[SERVER] MTI-EVO Unified Server (dev mode) on {self.port}")
         
         # Threaded Server
         class ThreadedHTTPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

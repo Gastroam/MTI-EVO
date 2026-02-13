@@ -14,7 +14,7 @@ from .core.logger import get_logger
 from .telemetry import TelemetrySystem
 
 try:
-    from .mti_proprioceptor import MTIProprioceptor, CognitiveState
+    from .cortex.introspection import MTIProprioceptor, CognitiveState
 except ImportError:
     MTIProprioceptor = None
     CognitiveState = None

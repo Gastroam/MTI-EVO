@@ -35,9 +35,8 @@ class ControlPlaneRouter:
         """
         # [PHASE 55] Settings API
         if path == '/api/settings':
-             from mti_evo.core.config import MTIConfig
-             # We want to return dict
-             # Assuming config is dict or MTIConfig
+             if hasattr(self.config, "to_dict"):
+                 return self.config.to_dict(include_private=False), 200
              if hasattr(self.config, '__dict__'):
                  return vars(self.config), 200
              return self.config, 200
@@ -89,15 +88,15 @@ class ControlPlaneRouter:
                 "tiers": {
                     "public": {
                         "GET /status": "Brain health, neuron count, mode",
-                        "GET /api/graph": "Graph topology (nodes, edges)",
-                        "GET /api/probe?seed=X": "Deep inspection of a single neuron",
+                        "GET /api/graph": "Graph topology (partial capability)",
+                        "GET /api/probe?seed=X": "Deep inspection (partial capability)",
                         "GET /api/models": "List available models",
                         "POST /api/model/load": "Load a model by path",
                         "GET /api/settings": "Retrieve current config",
                         "POST /api/settings": "Update live config"
                     },
                     "researcher": {
-                        "GET /api/attractors": "Attractor field scan",
+                        "GET /api/attractors": "Attractor field scan (partial capability)",
                         "GET /api/events": "Telemetry events",
                         "GET /api/metrics": "Metrics history",
                         "GET /api/playground/scripts": "List playground scripts",
@@ -110,7 +109,8 @@ class ControlPlaneRouter:
             
         elif path == '/api/graph':
             result = self.runtime.graph()
-            return result, 200
+            status = 501 if isinstance(result, dict) and result.get("status") == "not_implemented" else 200
+            return result, status
             
         elif path == '/api/metrics':
             # [PHASE 48] Metrics History
@@ -138,16 +138,15 @@ class ControlPlaneRouter:
             start = int(query.get('start')) if query.get('start') else None
             end = int(query.get('end')) if query.get('end') else None
             
-            # Attractors might not be in minimal runtime API yet.
-            # Delegating to runtime.broca for now if runtime doesn't have it.
-            # Ideally runtime exposes it.
-            # Let's assume runtime.broca.api.get_attractor_field if needed, or runtime.attractors()
-            # For now, let's keep using the old API method but accessed via runtime.
-            # If Runtime wraps Broca, does it expose API?
-            # User said "Minimal surface". 
-            # Let's add `attractors` to Runtime or access via broca.
-            attractors = self.runtime.broca.api.get_attractor_field(start_seed=start, end_seed=end, scan_all=scan_all) if hasattr(self.runtime, 'broca') else {}
-            return {"attractors": attractors}, 200
+            if hasattr(self.runtime, "attractors"):
+                result = self.runtime.attractors(start_seed=start, end_seed=end, scan_all=scan_all)
+                status = 501 if isinstance(result, dict) and result.get("status") == "not_implemented" else 200
+                return result, status
+            return {
+                "status": "not_implemented",
+                "reason": "attractor runtime under construction",
+                "attractors": [],
+            }, 501
             
         elif path.startswith('/api/probe'):
             query = {}
@@ -163,7 +162,8 @@ class ControlPlaneRouter:
                 return {"error": "Missing seed parameter"}, 400
 
             result = self.runtime.probe(seed)
-            return result, 200
+            status = 501 if isinstance(result, dict) and result.get("status") == "not_implemented" else 200
+            return result, status
             
         return None  # Not handled
 

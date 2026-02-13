@@ -4,7 +4,7 @@ MTI-EVO CLI (Command Line Interface)
 Main entry point for the mti-evo command.
 
 Usage:
-  mti-evo server       Start the HTTP server
+  mti-evo server       Start the official Substrate HTTP server
   mti-evo setup        Run interactive setup wizard
   mti-evo config       Show current configuration
   mti-evo engines      List available engines

@@ -1,4 +1,5 @@
 graft src/mti_evo
+prune src/mti_evo/semantics
 
 prune tests
 prune experiments

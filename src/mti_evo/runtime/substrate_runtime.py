@@ -65,20 +65,33 @@ class SubstrateRuntime:
 
     def probe(self, seed: int) -> Dict[str, Any]:
         """Deep scan of a neuron."""
-        from mti_evo.api import EvoAPI 
-        # Reuse API logic or move logic here?
-        # Ideally logic moves to Runtime or Core directly.
-        # Broca has probe_neuron? No, API had it.
-        # Let's grab it from API or reimplement clean.
-        # For now, placeholder or delegate.
-        return self.broca.probe_neuron(seed) if hasattr(self.broca, 'probe_neuron') else {}
+        if hasattr(self.broca, 'probe_neuron'):
+            return self.broca.probe_neuron(seed)
+        return {
+            "status": "not_implemented",
+            "reason": "probe runtime under construction",
+            "seed": seed,
+        }
 
     def graph(self) -> Dict[str, Any]:
         """Topology export."""
-        # This logic was in EvoAPI.get_graph_topology.
-        # Should be moved to Runtime or a GraphService.
-        # For now, we leave it in API/Broca as we refactor.
-        pass
+        return {
+            "status": "not_implemented",
+            "reason": "graph runtime under construction",
+            "nodes": [],
+            "edges": [],
+        }
+
+    def attractors(self, start_seed=None, end_seed=None, scan_all: bool = True) -> Dict[str, Any]:
+        """Attractor scan capability (partial)."""
+        return {
+            "status": "not_implemented",
+            "reason": "attractor runtime under construction",
+            "attractors": [],
+            "scan_all": scan_all,
+            "start_seed": start_seed,
+            "end_seed": end_seed,
+        }
 
     def resonate(self, text: str) -> Dict[str, Any]:
         """Inject text, get resonance."""

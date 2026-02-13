@@ -16,7 +16,7 @@ from multiprocessing import Queue
 from typing import Dict, Optional, Any
 
 # Core Imports
-from mti_evo.core.config import MTIConfig
+from mti_evo.config import load_config
 
 from mti_evo.server.playground import PlaygroundManager
 from mti_evo.server.router import ControlPlaneRouter
@@ -189,7 +189,7 @@ class SubstrateServer:
     def __init__(self, port=8800, multiprocessing=True):
         self.port = port
         self.multiprocessing = multiprocessing
-        self.config = MTIConfig() # Direct instantiation
+        self.config = load_config()
 
         
         # IPC
@@ -220,7 +220,7 @@ class SubstrateServer:
         self.httpd = None
 
     def start(self):
-        print("🌐 MTI-EVO Substrate Server v2.3 (Production)")
+        print("[SERVER] MTI-EVO Substrate Server v2.3 (Production)")
         
         if self.multiprocessing:
             self._start_inference()
@@ -232,10 +232,13 @@ class SubstrateServer:
         from mti_evo.adapters.inference import InferenceProcess
         
         model_cfg = {
-            'model_type': self.config.get('model_type', 'gguf'),
-            'model_path': self.config.get('model_path', ''),
-            'n_ctx': self.config.get('n_ctx', 4096),
-            'gpu_layers': self.config.get('gpu_layers', -1)
+            'model_type': self.config.model_type,
+            'model_path': self.config.model_path,
+            'n_ctx': self.config.n_ctx,
+            'gpu_layers': self.config.gpu_layers,
+            'temperature': self.config.temperature,
+            'max_tokens': self.config.max_tokens,
+            'n_batch': self.config.n_batch,
         }
         
         self.inference_proc = InferenceProcess(
@@ -245,7 +248,7 @@ class SubstrateServer:
             model_cfg
         )
         self.inference_proc.start()
-        print("🧠 Inference Process Launched")
+        print("[SERVER] Inference process launched")
 
     def _start_http(self):
         # Configure Handler
@@ -254,7 +257,7 @@ class SubstrateServer:
         SubstrateHTTPHandler.router = self.control_router
         
         self.httpd = ThreadedHTTPServer(("", self.port), SubstrateHTTPHandler)
-        print(f"🚀 HTTP Serving on {self.port}")
+        print(f"[SERVER] HTTP serving on {self.port}")
         
     def serve_forever(self):
         try:

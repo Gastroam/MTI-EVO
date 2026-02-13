@@ -1,15 +1,8 @@
 import os
-import sys
-import json
 import logging
-
-# Ensure src and playground are in path - REMOVED
-# Modules should rely on the environment being configured correctly (PYTHONPATH or installed package)
-# _api_dir = os.path.dirname(__file__)
 
 from mti_evo.cortex.broca import BrocaAdapter
 from mti_evo.cortex.memory import CortexMemory
-from mti_evo.core.config import MTIConfig
 from mti_evo.core.config import MTIConfig
 from mti_evo.cortex.introspection import MTIProprioceptor
 
@@ -22,10 +15,6 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MTI-API")
-
-from mti_evo.mti_proprioceptor import MTIProprioceptor
-
-# ... (Previous imports kept by context usually, but explicit import block above for clarity)
 
 class EvoAPI:
     """
@@ -41,7 +30,8 @@ class EvoAPI:
             # Create a safe persistence ID from the path hash to avoid invalid chars
             pid = "api_" + str(abs(hash(self.base_path)))
             self.config = MTIConfig()
-            self.hippocampus = CortexMemory(persistence_id=pid, backend="auto")
+            memory_root = os.path.join(self.base_path, ".mti-brain", pid)
+            self.hippocampus = CortexMemory(base_path=memory_root, backend="auto")
             self.broca = BrocaAdapter(config=self.config, hippocampus=self.hippocampus)
             
             # [PHASE 58] Cognitive Proprioception

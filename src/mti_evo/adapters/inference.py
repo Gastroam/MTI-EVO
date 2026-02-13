@@ -39,22 +39,25 @@ class InferenceProcess(Process):
     
     def run(self):
         """Main loop - runs in separate process."""
-        print(f"🧠 Inference Process STARTING (PID {os.getpid()})...")
+        print(f"[INFERENCE] Process starting (PID {os.getpid()})...")
         
         try:
             # 1. Load shared substrate (mmap)
             # Use SubstrateRuntime as Composition Root (Option A)
             from mti_evo.runtime.substrate_runtime import SubstrateRuntime
+            from mti_evo.core.config import MTIConfig
+            
+            runtime_config = MTIConfig.from_dict(self.model_config)
             
             # This runtime instance is the WRITER (read_only=False)
-            self.runtime = SubstrateRuntime(config=self.model_config, read_only=False, persistence_id="substrate")
+            self.runtime = SubstrateRuntime(config=runtime_config, read_only=False, persistence_id="substrate")
             # Note: Startup might be slightly slower due to full init, but it guarantees consistency.
             
             # Alias for convenience
             self.broca = self.runtime.broca
             self.hippocampus = self.runtime.hippocampus
             
-            print(f"   ✅ Substrate Runtime initialized (Writer Mode)")
+            print("   [OK] Substrate runtime initialized (writer mode)")
             
             # 2. Load VRAM model (ONLY in this process)
             # Use Engine Registry to load appropriate engine
@@ -77,12 +80,12 @@ class InferenceProcess(Process):
                 self.llm = EngineRegistry.create(model_type, self.model_config)
                 # EngineProtocol.load(config)
                 self.llm.load(self.model_config)
-                print(f"   ✅ Engine Loaded: {model_type}")
+                print(f"   [OK] Engine loaded: {model_type}")
             except Exception as e:
-                print(f"   ❌ Engine Load Failed: {e}")
+                print(f"   [ERROR] Engine load failed: {e}")
                 self.llm = None
             
-            print(f"🧠 Inference Process READY (PID {os.getpid()})")
+            print(f"[INFERENCE] Process ready (PID {os.getpid()})")
             
             # 3. Process requests
             while self.running:
@@ -91,18 +94,18 @@ class InferenceProcess(Process):
                     request = self.request_queue.get(timeout=0.1)
                     
                     if request is None:  # Poison pill
-                        print("🧠 Inference Process: Poison pill received, shutting down...")
+                        print("[INFERENCE] Poison pill received, shutting down...")
                         break
                     
                     self._handle_request(request)
                     
                 except Exception as e:
                     if "Empty" not in str(type(e).__name__):
-                        print(f"⚠️ Inference Process error: {e}")
+                        print(f"[INFERENCE] Warning: {e}")
                     continue
                     
         except Exception as e:
-            print(f"❌ Inference Process failed to start: {e}")
+            print(f"[INFERENCE] Failed to start: {e}")
             import traceback
             traceback.print_exc()
         finally:
@@ -172,7 +175,7 @@ class InferenceProcess(Process):
     
     def _cleanup(self):
         """Graceful shutdown."""
-        print("🧠 Inference Process: Cleaning up...")
+        print("[INFERENCE] Cleaning up...")
         
         # Save substrate state
         if self.broca and hasattr(self.broca, 'sleep'):
@@ -189,4 +192,4 @@ class InferenceProcess(Process):
             except:
                 pass
         
-        print("🧠 Inference Process: Shutdown complete.")
+        print("[INFERENCE] Shutdown complete.")
