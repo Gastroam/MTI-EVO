@@ -1,4 +1,4 @@
-# Contributing to MTI-MOE-Bridge
+# Contributing to MTI-EVO
 
 Thank you for your interest in contributing to the MTI Exocortex project!
 
