@@ -250,8 +250,6 @@ Core remains neutral and substrate-focused.
 # 9. Known Limits (Honest State)
 
 * No distributed clustering in core
-* No vector database integration
-* No canonical memory schema standardization yet
 * No long-term substrate migration tooling
 * No formal benchmarking vs other runtimes
 
